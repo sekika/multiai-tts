@@ -1,0 +1,31 @@
+[project]
+name = "multiai-tts"
+version = "0.1.0"
+description = "TTS extension for multiai using OpenAI and Google GenAI"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Katsutoshi Seki"}
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "multiai",
+    "openai",
+    "google-genai",
+    "sounddevice",
+    "soundfile",
+    "pydub",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/sekika/multiai-tts"
+"Bug Tracker" = "https://github.com/sekika/multiai-tts/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
