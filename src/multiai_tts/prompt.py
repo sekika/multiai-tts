@@ -21,8 +21,6 @@ class Prompt(multiai.Prompt):
         self.tts_voice_openai = 'marin'
         self.tts_voice_google = 'charon'
         self.tts_framerate_google = 24000
-        self.error = False
-        self.error_message = None
 
     def set_tts_provider(self, provider):
         """Sets the active TTS provider."""
@@ -42,6 +40,7 @@ class Prompt(multiai.Prompt):
     def speak(self, prompt: str):
         """Generates audio from the prompt and plays it using sounddevice."""
         # Request WAV format specifically for playback compatibility
+        self.error = False
         wav_bytes = self.get_wav(prompt, fmt='wav')
         if self.error or not wav_bytes:
             return
@@ -67,6 +66,7 @@ class Prompt(multiai.Prompt):
             fmt = 'wav'
 
         # Fetch audio bytes (OpenAI attempts native format, Google returns WAV)
+        self.error = False
         audio_bytes = self.get_wav(prompt, fmt=fmt)
 
         if self.error or not audio_bytes:
