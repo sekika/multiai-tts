@@ -235,7 +235,7 @@ class Prompt(multiai.Prompt):
                     if 'error' in err_data and 'message' in err_data['error']:
                         message = err_data['error']['message']
                 except (ValueError, SyntaxError, IndexError):
-                    pass # Keep original message if parsing fails
+                    pass  # Keep original message if parsing fails
 
             status = getattr(e, 'status', 'Error')
             self.error_message = f"Error {code} {status}\n{message}"
@@ -254,6 +254,7 @@ class Prompt(multiai.Prompt):
                 self.error_message = f"Error {p_code} {p_status}\n{p_msg}"
             else:
                 self.error_message = raw_text
+
 
 class TTS_Provider(enum.Enum):
     OPENAI = enum.auto()
