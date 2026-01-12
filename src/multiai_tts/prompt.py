@@ -207,26 +207,53 @@ class Prompt(multiai.Prompt):
     def handle_error(self, e):
         """Parses exception details into a readable error message."""
         self.error = True
+
+        # 1. Try to extract from structured body (OpenAI v1+)
+        body = getattr(e, 'body', None)
+        if isinstance(body, dict) and 'error' in body:
+            err = body['error']
+            code = err.get('code') or getattr(e, 'code', 'Error')
+            message = err.get('message')
+            if message:
+                self.error_message = f"Error {code} Error\n{message}"
+                return
+
+        # 2. Handle standard attributes (Google, OpenAI fallback)
         code = getattr(e, 'code', None)
         message = getattr(e, 'message', None)
 
         if code and message:
+            # Check if 'message' is actually a verbose OpenAI dump string
+            # e.g. "Error code: 404 - {'error': {'message': ...}}"
+            msg_str = str(message)
+            if msg_str.startswith("Error code:") and " - {'error':" in msg_str:
+                try:
+                    import ast
+                    # Extract the dict part after " - "
+                    dict_str = msg_str.split(" - ", 1)[1]
+                    err_data = ast.literal_eval(dict_str)
+                    if 'error' in err_data and 'message' in err_data['error']:
+                        message = err_data['error']['message']
+                except (ValueError, SyntaxError, IndexError):
+                    pass # Keep original message if parsing fails
+
             status = getattr(e, 'status', 'Error')
             self.error_message = f"Error {code} {status}\n{message}"
         else:
+            # 3. Fallback regex for unstructured exceptions
             import re
             raw_text = str(e)
-            code_match = re.search(r"'code':\s*(\d+)", raw_text)
+            code_match = re.search(r"'code':\s*(\d+|'[^']+')", raw_text)
             status_match = re.search(r"'status':\s*'([^']+)'", raw_text)
             msg_match = re.search(r"'message':\s*'([^']+)'", raw_text)
+
             if code_match and msg_match:
-                p_code = code_match.group(1)
+                p_code = code_match.group(1).replace("'", "")
                 p_status = status_match.group(1) if status_match else "Error"
                 p_msg = msg_match.group(1)
                 self.error_message = f"Error {p_code} {p_status}\n{p_msg}"
             else:
                 self.error_message = raw_text
-
 
 class TTS_Provider(enum.Enum):
     OPENAI = enum.auto()
