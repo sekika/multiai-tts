@@ -1,22 +1,25 @@
 # multiai-tts
 
-`multiai-tts` is an extension library for [multiai](https://sekika.github.io/multiai/) that provides Text-to-Speech (TTS) capabilities using OpenAI and Google GenAI.
+`multiai-tts` is an extension library for [multiai](https://sekika.github.io/multiai/) that provides Text-to-Speech (TTS) capabilities using OpenAI, Google GenAI, and Azure Speech.
 
 ## Prerequisites
 
 **API Key Configuration**
 
-This library relies on the configuration provided by `multiai`. You must set up your API keys (OpenAI API Key, Google API Key) using `multiai`'s configuration files or environment variables before using this library.
+This library relies on the configuration provided by `multiai`. You must set up your API keys (OpenAI API Key, Google API Key, Azure TTS Key and Region) using `multiai`'s configuration files or environment variables before using this library.
 
 For details on how to configure API keys, please refer to the **[multiai documentation](https://sekika.github.io/multiai/)**.
 
-## Installation
+**System Requirements**
 
-You also need to install `ffmpeg` on your system if you want to save audio in formats other than WAV (e.g., MP3).
+- `ffmpeg` must be installed if you want to save audio in formats other than WAV (e.g., MP3).
+- `pydub` is required for audio conversion.
+
+## Installation
 
 ```bash
 pip install multiai-tts
-```
+````
 
 ## Usage
 
@@ -26,21 +29,18 @@ pip install multiai-tts
 import sys
 import multiai_tts
 
-provider = 'google'
-model = 'gemini-2.5-flash-preview-tts'
-
 client = multiai_tts.Prompt()
-client.set_tts_model(provider, model)
+client.set_tts_model('google', 'gemini-2.5-flash-preview-tts')
 client.tts_voice_google = 'charon'
 
 # Speak directly
-client.speak("Please speak the following. Hello, this is a test from Google model.")
+client.speak("Hello, this is a test from Google model.")
 if client.error:
     print(client.error_message)
     sys.exit(1)
 
 # Save to file
-client.save_tts("Please speak the following. Saving this audio to mp3.", "output_google.mp3")
+client.save_tts("Saving this audio to mp3.", "output_google.mp3")
 if client.error:
     print(client.error_message)
     sys.exit(1)
@@ -52,11 +52,8 @@ if client.error:
 import sys
 import multiai_tts
 
-provider = 'openai'
-model = 'gpt-4o-mini-tts'
-
 client = multiai_tts.Prompt()
-client.set_tts_model(provider, model)
+client.set_tts_model('openai', 'gpt-4o-mini-tts')
 client.tts_voice_openai = 'marin'
 
 # Speak directly
@@ -71,3 +68,32 @@ if client.error:
     print(client.error_message)
     sys.exit(1)
 ```
+
+### Azure TTS Example
+
+```python
+import sys
+import multiai_tts
+
+client = multiai_tts.Prompt()
+client.set_tts_provider('azure')
+client.tts_voice_azure = 'en-US-JennyNeural'
+
+# Speak directly
+client.speak("Hello, this is a test from Azure TTS.")
+if client.error:
+    print(client.error_message)
+    sys.exit(1)
+
+# Save to file
+client.save_tts("Saving this audio to mp3.", "output_azure.mp3")
+if client.error:
+    print(client.error_message)
+    sys.exit(1)
+```
+
+## Notes
+
+* `Prompt.get_wav()` fetches the raw audio data in memory. Playback is separate from retrieval.
+* Error handling: After `speak()` or `save_tts()`, always check `client.error` and `client.error_message`.
+* WAV output is default; use `pydub`/`ffmpeg` for other formats.
