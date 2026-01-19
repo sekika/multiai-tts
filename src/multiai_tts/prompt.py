@@ -8,6 +8,21 @@ import soundfile as sf
 from pydub import AudioSegment
 from openai import OpenAI
 from google import genai
+import azure.cognitiveservices.speech as speechsdk
+
+# Azure TTS error code mapping
+# https://learn.microsoft.com/en-us/javascript/api/microsoft-cognitiveservices-speech-sdk/cancellationerrorcode
+AZURE_ERROR_CODES = {
+    0: "NoError",
+    1: "AuthenticationFailure",
+    2: "BadRequestParameters",
+    3: "TooManyRequests",
+    4: "ConnectionFailure",
+    5: "ServiceTimeout",
+    6: "ServiceError",
+    7: "RuntimeError",
+    8: "Forbidden",
+}
 
 
 class Prompt(multiai.Prompt):
@@ -21,6 +36,7 @@ class Prompt(multiai.Prompt):
         self.tts_voice_openai = 'marin'
         self.tts_voice_google = 'charon'
         self.tts_framerate_google = 24000
+        self.tts_voice_azure = 'en-US-AriaNeural'
 
     def set_tts_provider(self, provider):
         """Sets the active TTS provider."""
@@ -204,11 +220,72 @@ class Prompt(multiai.Prompt):
         except Exception as e:
             self.handle_error(e)
 
+    def get_wav_azure(self, fmt: str = 'wav'):
+        """Fetch WAV bytes from Azure TTS using self.prompt, do not play audio."""
+
+        if not getattr(self, 'azure_tts_api_key', None):
+            self.error = True
+            self.error_message = "Azure TTS API key is not set."
+            self.wav = None
+            return
+
+        try:
+            speech_config = speechsdk.SpeechConfig(
+                subscription=self.azure_tts_api_key,
+                region=self.azure_tts_region
+            )
+            speech_config.speech_synthesis_voice_name = self.tts_voice_azure
+
+            # **Critical:** output only to memory, no default speaker
+            audio_stream = speechsdk.audio.PullAudioOutputStream()
+            audio_output_config = speechsdk.audio.AudioOutputConfig(
+                stream=audio_stream)
+            synthesizer = speechsdk.SpeechSynthesizer(
+                speech_config=speech_config,
+                audio_config=audio_output_config
+            )
+
+            # Generate speech
+            result = synthesizer.speak_text_async(self.prompt).get()
+
+            if result.reason == speechsdk.ResultReason.Canceled:
+                cancellation = result.cancellation_details
+                code_int = cancellation.error_code.value
+                code_str = AZURE_ERROR_CODES.get(
+                    code_int, f"UnknownError({code_int})")
+                self.error = True
+                self.error_message = (
+                    f"Azure TTS failed: {cancellation.reason} ({code_str})\n"
+                    f"Details: {cancellation.error_details}"
+                )
+                self.wav = None
+                return
+
+            # Read the audio from the PullAudioOutputStream
+            buffer = io.BytesIO()
+            buffer.write(result.audio_data)
+            self.wav = buffer.getvalue()
+            self.error = False
+
+        except Exception as e:
+            self.handle_error(e)
+            self.wav = None
+
     def handle_error(self, e):
-        """Parses exception details into a readable error message."""
+        """Parses exception or result details into a readable error message."""
         self.error = True
 
-        # 1. Try to extract from structured body (OpenAI v1+)
+        # --- Azure TTS ResultReason.Canceled handling ---
+        if hasattr(e, 'reason') and e.reason == speechsdk.ResultReason.Canceled:
+            cancellation = getattr(e, 'cancellation_details', None)
+            if cancellation:
+                code = getattr(cancellation, 'error_code', 'Canceled')
+                details = getattr(
+                    cancellation, 'error_details', 'No details provided')
+                self.error_message = f"Azure TTS canceled: {code}\n{details}"
+                return
+
+        # --- OpenAI structured body ---
         body = getattr(e, 'body', None)
         if isinstance(body, dict) and 'error' in body:
             err = body['error']
@@ -218,44 +295,43 @@ class Prompt(multiai.Prompt):
                 self.error_message = f"Error {code} Error\n{message}"
                 return
 
-        # 2. Handle standard attributes (Google, OpenAI fallback)
+        # --- Standard attributes (Google, OpenAI fallback) ---
         code = getattr(e, 'code', None)
         message = getattr(e, 'message', None)
-
         if code and message:
-            # Check if 'message' is actually a verbose OpenAI dump string
-            # e.g. "Error code: 404 - {'error': {'message': ...}}"
             msg_str = str(message)
+            # Attempt to parse verbose OpenAI dump
             if msg_str.startswith("Error code:") and " - {'error':" in msg_str:
                 try:
                     import ast
-                    # Extract the dict part after " - "
                     dict_str = msg_str.split(" - ", 1)[1]
                     err_data = ast.literal_eval(dict_str)
                     if 'error' in err_data and 'message' in err_data['error']:
                         message = err_data['error']['message']
-                except (ValueError, SyntaxError, IndexError):
-                    pass  # Keep original message if parsing fails
+                except Exception:
+                    pass  # keep original message
 
             status = getattr(e, 'status', 'Error')
             self.error_message = f"Error {code} {status}\n{message}"
-        else:
-            # 3. Fallback regex for unstructured exceptions
-            import re
-            raw_text = str(e)
-            code_match = re.search(r"'code':\s*(\d+|'[^']+')", raw_text)
-            status_match = re.search(r"'status':\s*'([^']+)'", raw_text)
-            msg_match = re.search(r"'message':\s*'([^']+)'", raw_text)
+            return
 
-            if code_match and msg_match:
-                p_code = code_match.group(1).replace("'", "")
-                p_status = status_match.group(1) if status_match else "Error"
-                p_msg = msg_match.group(1)
-                self.error_message = f"Error {p_code} {p_status}\n{p_msg}"
-            else:
-                self.error_message = raw_text
+        # --- Fallback regex for unstructured exceptions ---
+        import re
+        raw_text = str(e)
+        code_match = re.search(r"'code':\s*(\d+|'[^']+')", raw_text)
+        status_match = re.search(r"'status':\s*'([^']+)'", raw_text)
+        msg_match = re.search(r"'message':\s*'([^']+)'", raw_text)
+
+        if code_match and msg_match:
+            p_code = code_match.group(1).replace("'", "")
+            p_status = status_match.group(1) if status_match else "Error"
+            p_msg = msg_match.group(1)
+            self.error_message = f"Error {p_code} {p_status}\n{p_msg}"
+        else:
+            self.error_message = raw_text
 
 
 class TTS_Provider(enum.Enum):
     OPENAI = enum.auto()
     GOOGLE = enum.auto()
+    AZURE = enum.auto()

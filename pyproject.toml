@@ -17,6 +17,7 @@ dependencies = [
     "multiai",
     "openai",
     "google-genai",
+    "azure-cognitiveservices-speech",
     "sounddevice",
     "soundfile",
     "pydub",
