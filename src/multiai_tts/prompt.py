@@ -3,9 +3,10 @@ import enum
 import os
 import wave
 import multiai
+import subprocess
+import tempfile
 import sounddevice as sd
 import soundfile as sf
-from pydub import AudioSegment
 from openai import OpenAI
 from google import genai
 import azure.cognitiveservices.speech as speechsdk
@@ -108,9 +109,25 @@ class Prompt(multiai.Prompt):
                 with open(filename, "wb") as f:
                     f.write(audio_bytes)
             else:
-                # Convert using pydub (requires ffmpeg)
-                segment = AudioSegment.from_wav(io.BytesIO(audio_bytes))
-                segment.export(filename, format=fmt)
+                with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+                    tmp.write(audio_bytes)
+                    tmp_path = tmp.name
+
+                try:
+                    subprocess.run(
+                        [
+                            "ffmpeg",
+                            "-y",
+                            "-i",
+                            tmp_path,
+                            filename,
+                        ],
+                        check=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                finally:
+                    os.remove(tmp_path)
 
         except Exception as e:
             self.error = True

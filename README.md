@@ -13,7 +13,6 @@ For details on how to configure API keys, please refer to the **[multiai documen
 **System Requirements**
 
 - `ffmpeg` must be installed if you want to save audio in formats other than WAV (e.g., MP3).
-- `pydub` is required for audio conversion.
 
 ## Installation
 
