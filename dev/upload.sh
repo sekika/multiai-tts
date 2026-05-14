@@ -15,6 +15,6 @@ python3 -m build
 twine upload --skip-existing dist/*
 
 # Uninstall multiai
-python3 -m pip uninstall multiai
+python3 -m pip uninstall multiai-tts
 echo "Upload completed. Installed version uninstalled. Wait for a while and run"
 echo "python3 -m pip install multiai-tts"
