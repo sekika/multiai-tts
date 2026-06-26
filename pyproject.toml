@@ -29,3 +29,8 @@ dependencies = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+# Make the src-layout package importable when running `pytest` from the repo
+# root without an editable install.
+pythonpath = ["src"]

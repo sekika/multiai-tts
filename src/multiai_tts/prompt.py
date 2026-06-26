@@ -54,13 +54,20 @@ class Prompt(multiai.Prompt):
         self.tts_model = model
         setattr(self, 'model_' + provider.lower(), model)
 
-    def speak(self, prompt: str,
+    def speak(self, text: str,
+              prompt: str = "",
               chunk_size: int = None,
               split_chars: str = "。．.!！?？\n",
               chunk_overflow: str = "extend"):
-        """Generates audio from the prompt and plays it using sounddevice.
+        """Generates audio from ``text`` and plays it using sounddevice.
 
-        When ``chunk_size`` is a positive integer, the text is split into
+        ``prompt`` is an optional style instruction (voice, tone, speed, …).
+        It is *not* part of the spoken text and is *not* subject to chunk
+        splitting: when ``chunk_size`` splits ``text`` into chunks, ``prompt``
+        is re-applied to every chunk so the style stays consistent. An empty
+        ``prompt`` reproduces the original behavior (synthesize ``text`` only).
+
+        When ``chunk_size`` is a positive integer, ``text`` is split into
         chunks (see :meth:`split_text`) and the generated audio of every chunk
         is concatenated before playback.
         """
@@ -68,10 +75,10 @@ class Prompt(multiai.Prompt):
 
         if chunk_size is None:
             # Request WAV format specifically for playback compatibility
-            wav_bytes = self.get_wav(prompt, fmt='wav')
+            wav_bytes = self.get_wav(text, fmt='wav', prompt=prompt)
         else:
             wav_bytes = self._get_chunked_wav(
-                prompt, chunk_size, split_chars, chunk_overflow)
+                text, chunk_size, split_chars, chunk_overflow, prompt=prompt)
 
         if self.error or not wav_bytes:
             return
@@ -85,15 +92,22 @@ class Prompt(multiai.Prompt):
             self.error = True
             self.error_message = f"Playback error: {e}"
 
-    def save_tts(self, prompt: str, filename: str,
+    def save_tts(self, text: str, filename: str,
+                 prompt: str = "",
                  chunk_size: int = None,
                  split_chars: str = "。．.!！?？\n",
                  chunk_overflow: str = "extend"):
         """
-        Generates audio and saves it to a file.
+        Generates audio from ``text`` and saves it to a file.
         Automatically handles format conversion based on file extension.
 
-        When ``chunk_size`` is a positive integer, the text is split into
+        ``prompt`` is an optional style instruction (voice, tone, speed, …).
+        It is *not* part of the spoken text and is *not* subject to chunk
+        splitting: when ``chunk_size`` splits ``text`` into chunks, ``prompt``
+        is re-applied to every chunk so the style stays consistent. An empty
+        ``prompt`` reproduces the original behavior (synthesize ``text`` only).
+
+        When ``chunk_size`` is a positive integer, ``text`` is split into
         chunks (see :meth:`split_text`), each chunk is synthesized as WAV and
         the results are concatenated before being written/converted to
         ``filename``.
@@ -109,7 +123,7 @@ class Prompt(multiai.Prompt):
         if chunk_size is not None:
             # Chunked mode: always synthesize WAV, concatenate, then convert.
             wav_bytes = self._get_chunked_wav(
-                prompt, chunk_size, split_chars, chunk_overflow)
+                text, chunk_size, split_chars, chunk_overflow, prompt=prompt)
             if self.error or not wav_bytes:
                 return
             try:
@@ -120,7 +134,7 @@ class Prompt(multiai.Prompt):
             return
 
         # Fetch audio bytes (OpenAI attempts native format, Google returns WAV)
-        audio_bytes = self.get_wav(prompt, fmt=fmt)
+        audio_bytes = self.get_wav(text, fmt=fmt, prompt=prompt)
 
         if self.error or not audio_bytes:
             return
@@ -173,6 +187,11 @@ class Prompt(multiai.Prompt):
                    split_chars: str = "。．.!！?？\n",
                    chunk_overflow: str = "extend"):
         """Split ``text`` into chunks no longer than ``chunk_size`` characters.
+
+        ``text`` is the spoken body only; style instructions (the ``prompt``
+        argument of :meth:`speak` / :meth:`save_tts`) are never passed here, so
+        ``chunk_size`` is measured against the body length and is unaffected by
+        the prompt length.
 
         Within each ``chunk_size`` window the split position is the position
         immediately after the last (rightmost) character contained in
@@ -235,21 +254,24 @@ class Prompt(multiai.Prompt):
 
         return chunks
 
-    def _get_chunked_wav(self, prompt, chunk_size,
-                         split_chars, chunk_overflow):
-        """Split the prompt, synthesize each chunk as WAV and concatenate.
+    def _get_chunked_wav(self, text, chunk_size,
+                         split_chars, chunk_overflow, prompt=""):
+        """Split the body text, synthesize each chunk as WAV and concatenate.
+
+        Only ``text`` is split; ``prompt`` (a style instruction) is re-applied
+        to every chunk so the style stays consistent across the whole audio.
 
         Returns the combined WAV bytes, or ``None`` on error (with
         ``self.error`` set).
         """
         chunks = self.split_text(
-            prompt, chunk_size, split_chars, chunk_overflow)
+            text, chunk_size, split_chars, chunk_overflow)
         if self.error or not chunks:
             return None
 
         wav_list = []
         for chunk in chunks:
-            wav_bytes = self.get_wav(chunk, fmt='wav')
+            wav_bytes = self.get_wav(chunk, fmt='wav', prompt=prompt)
             if self.error or not wav_bytes:
                 return None
             wav_list.append(wav_bytes)
@@ -305,9 +327,18 @@ class Prompt(multiai.Prompt):
         finally:
             os.remove(tmp_path)
 
-    def get_wav(self, prompt: str, fmt: str = 'wav'):
-        """Dispatch method to generate audio bytes using the selected provider."""
-        self.prompt = prompt
+    def get_wav(self, text: str, fmt: str = 'wav', prompt: str = ""):
+        """Dispatch method to generate audio bytes using the selected provider.
+
+        ``text`` is the spoken body. ``prompt`` is an optional style
+        instruction prepended to the text before synthesis. The same rule is
+        used for every provider; an empty (or ``None``) ``prompt`` leaves the
+        request unchanged.
+        """
+        if prompt:
+            self.prompt = f"{prompt}\n\n{text}"
+        else:
+            self.prompt = text
         func_name = 'get_wav_' + self.tts_provider.name.lower()
         try:
             func = getattr(self, func_name)

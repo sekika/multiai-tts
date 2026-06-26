@@ -155,6 +155,97 @@ class TestTTSPrompt(unittest.TestCase):
         self.assertTrue(self.client.error)
 
     @patch('multiai_tts.prompt.OpenAI')
+    def test_no_prompt_backward_compat(self, MockOpenAI):
+        """Without a prompt, the body text is sent unchanged (backward compat)."""
+        mock_client = MockOpenAI.return_value
+        mock_client.audio.speech.create.return_value = MagicMock(
+            content=b'wav')
+
+        self.client.set_tts_model('openai', 'tts-model')
+        self.client.get_wav("Hello", fmt='wav')
+
+        self.assertFalse(self.client.error)
+        _, kwargs = mock_client.audio.speech.create.call_args
+        self.assertEqual(kwargs['input'], 'Hello')
+
+    @patch('multiai_tts.prompt.OpenAI')
+    def test_prompt_prepended_to_text(self, MockOpenAI):
+        """The prompt is prepended to the body text, uniformly per provider."""
+        mock_client = MockOpenAI.return_value
+        mock_client.audio.speech.create.return_value = MagicMock(
+            content=b'wav')
+
+        self.client.set_tts_model('openai', 'tts-model')
+        self.client.get_wav("Body text", fmt='wav', prompt="Speak cheerfully.")
+
+        self.assertFalse(self.client.error)
+        _, kwargs = mock_client.audio.speech.create.call_args
+        sent = kwargs['input']
+        self.assertIn("Speak cheerfully.", sent)
+        self.assertIn("Body text", sent)
+        self.assertTrue(sent.index("Speak cheerfully.") < sent.index("Body text"))
+
+    @patch('multiai_tts.prompt.OpenAI')
+    def test_prompt_applied_to_every_chunk(self, MockOpenAI):
+        """Chunking splits only the body; the prompt is prepended to each chunk."""
+        import io as _io
+        import wave
+
+        def make_wav(nframes):
+            buf = _io.BytesIO()
+            with wave.open(buf, 'wb') as w:
+                w.setnchannels(1)
+                w.setsampwidth(2)
+                w.setframerate(24000)
+                w.writeframes(b'\x00\x00' * nframes)
+            return buf.getvalue()
+
+        mock_client = MockOpenAI.return_value
+        mock_client.audio.speech.create.return_value = MagicMock(
+            content=make_wav(10))
+
+        self.client.set_tts_model('openai', 'tts-model')
+        # A long prompt must NOT count against chunk_size: body "abc.def.ghi"
+        # splits into 3 chunks regardless of prompt length.
+        prompt = "Speak cheerfully."
+        self.client.save_tts(
+            "abc.def.ghi", "out_prompt.wav", prompt=prompt,
+            chunk_size=4, split_chars=".")
+
+        self.assertFalse(self.client.error)
+        # "abc." / "def." / "ghi" => 3 chunks regardless of prompt length.
+        self.assertEqual(mock_client.audio.speech.create.call_count, 3)
+        bodies = ["abc.", "def.", "ghi"]
+        for call, body in zip(
+                mock_client.audio.speech.create.call_args_list, bodies):
+            _, kwargs = call
+            # Every chunk request carries the prompt followed by that chunk.
+            self.assertTrue(kwargs['input'].startswith(prompt))
+            self.assertTrue(kwargs['input'].endswith(body))
+        import os as _os
+        self.assertTrue(_os.path.exists("out_prompt.wav"))
+        _os.remove("out_prompt.wav")
+
+    @patch('multiai_tts.prompt.OpenAI')
+    def test_chunk_size_none_with_prompt_single_call(self, MockOpenAI):
+        """chunk_size=None + prompt == one synth call with the prompt prepended."""
+        mock_client = MockOpenAI.return_value
+        mock_client.audio.speech.create.return_value = MagicMock(
+            content=b'wav')
+
+        self.client.set_tts_model('openai', 'tts-model')
+        self.client.save_tts(
+            "Body text", "out_single.wav", prompt="Speak calmly.")
+
+        self.assertFalse(self.client.error)
+        self.assertEqual(mock_client.audio.speech.create.call_count, 1)
+        _, kwargs = mock_client.audio.speech.create.call_args
+        self.assertEqual(kwargs['input'], "Speak calmly.\n\nBody text")
+        import os as _os
+        if _os.path.exists("out_single.wav"):
+            _os.remove("out_single.wav")
+
+    @patch('multiai_tts.prompt.OpenAI')
     def test_save_tts_chunked(self, MockOpenAI):
         """Chunked save_tts synthesizes each chunk and concatenates WAVs."""
         import io as _io

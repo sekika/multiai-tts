@@ -13,6 +13,7 @@
   - [OpenAI Example](#openai-example)
   - [Azure TTS Example](#azure-tts-example)
   - [Notes](#notes)
+- [Style prompts](#style-prompts)
 - [Long text (automatic chunking)](#long-text-automatic-chunking)
 
 ## Supported AI providers
@@ -121,6 +122,28 @@ if client.error:
 * Error handling: After `speak()` or `save_tts()`, always check `client.error` and `client.error_message`.
 * WAV output is default; `ffmpeg` is used for converting to other formats.
 
+## Style prompts
+
+Both `speak()` and `save_tts()` accept an optional `prompt` argument: a style
+instruction (voice, tone, speed, emotion, …) that is **separate from the spoken
+text**. The prompt is *not* read aloud and is *not* subject to chunk splitting.
+
+```python
+client.speak(
+    "Hello, this is a test.",
+    prompt="Speak cheerfully and a little slowly.",
+)
+```
+
+The prompt is prepended to the text before synthesis, using the same rule for
+every provider — whether a style prompt helps and how to phrase it is up to you.
+
+When the text is chunked (see below), the prompt is **re-applied to every
+chunk** so the style stays consistent across the whole audio. Because the
+prompt is kept separate from the body, `chunk_size` is measured against the
+spoken text length only — the prompt length never eats into it. Leaving
+`prompt` empty (the default) reproduces the original behavior exactly.
+
 ## Long text (automatic chunking)
 
 When the text is long — whether it exceeds a provider's request length limit
@@ -137,7 +160,8 @@ if client.error:
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `chunk_size` | `int` or `None` | `None` | Maximum characters per chunk. `None` disables splitting (original behavior). |
+| `prompt` | `str` | `""` | Style instruction applied to every chunk (see [Style prompts](#style-prompts)). Not part of the spoken text and not subject to splitting. |
+| `chunk_size` | `int` or `None` | `None` | Maximum characters per chunk, measured against the spoken text only. `None` disables splitting (original behavior). |
 | `split_chars` | `str` | `"。．.!！?？\n"` | Candidate split characters. The split point is just after the rightmost candidate found within `chunk_size`. |
 | `chunk_overflow` | `str` | `"extend"` | Behavior when no candidate is found within `chunk_size`: `"extend"` reads on until the next candidate (or end of text); `"error"` sets `client.error` and stops. |
 

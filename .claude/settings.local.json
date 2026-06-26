@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(apt-get install *)",
+      "Bash(sudo apt-get install -y libportaudio2)"
+    ]
+  }
+}
