@@ -24,6 +24,10 @@
 | [Google GenAI](https://ai.google.dev/gemini-api/docs/audio) | Emotion tags, multi-speaker | [Models](https://ai.google.dev/gemini-api/docs/models?hl=ja#audio_models) · [Voices](https://ai.google.dev/gemini-api/docs/audio#voices) · [API](https://ai.google.dev/api/generate-content) |
 | [Azure Speech](https://learn.microsoft.com/azure/ai-services/speech-service/text-to-speech) | SSML, extensive voice selection | [Voices](https://learn.microsoft.com/azure/ai-services/speech-service/language-support?tabs=tts) · [API](https://learn.microsoft.com/azure/ai-services/speech-service/rest-text-to-speech) |
 
+Install [multiai](https://sekika.github.io/multiai/) and run
+- `ai --list -o | grep tts` to display OpenAI's TTS models
+- `ai --list -g | grep tts` to display Google GenAI's TTS models
+
 ## Prerequisites
 
 **API key configuration**
