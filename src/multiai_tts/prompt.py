@@ -235,7 +235,8 @@ class Prompt(multiai.Prompt):
 
         return chunks
 
-    def _get_chunked_wav(self, prompt, chunk_size, split_chars, chunk_overflow):
+    def _get_chunked_wav(self, prompt, chunk_size,
+                         split_chars, chunk_overflow):
         """Split the prompt, synthesize each chunk as WAV and concatenate.
 
         Returns the combined WAV bytes, or ``None`` on error (with
