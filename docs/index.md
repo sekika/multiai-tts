@@ -50,7 +50,7 @@ import sys
 import multiai_tts
 
 client = multiai_tts.Prompt()
-client.set_tts_model('google', 'gemini-3.1-flash-tts-preview')
+client.set_tts_model('google', 'gemini-3.1-tts-flash-preview')
 client.tts_voice_google = 'charon'
 
 # Speak directly
