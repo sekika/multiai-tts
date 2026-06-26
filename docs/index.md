@@ -99,9 +99,10 @@ if client.error:
 
 ## Long text (automatic chunking)
 
-When the text exceeds a provider's request length limit, `speak()` and
-`save_tts()` can automatically split the text into chunks, synthesize each
-chunk, and join the resulting audio.
+When the text is long — whether it exceeds a provider's request length limit
+or degrades in quality with longer input (as is the case with some Gemini
+models) — `speak()` and `save_tts()` can automatically split the text into
+chunks, synthesize each chunk, and join the resulting audio.
 
 ```python
 # Split into chunks of at most ~1000 characters and join the audio
@@ -127,6 +128,8 @@ chunks = client.split_text(long_text, chunk_size=1000)
 * At chunk boundaries pitch, tempo, and trailing reverberation may shift
   slightly. This is an inherent limitation of the TTS APIs (each chunk is
   synthesized independently); no silence is inserted between chunks.
+* Some providers (e.g. Gemini 3.1 Flash TTS) are known to degrade in quality
+  on long inputs even within API limits; chunking can mitigate this.
 * With `chunk_overflow="extend"`, the actual chunk size may significantly
   exceed `chunk_size`.
 * Per-provider API character limits are not managed by this library — you are
