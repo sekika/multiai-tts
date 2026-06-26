@@ -54,11 +54,25 @@ class Prompt(multiai.Prompt):
         self.tts_model = model
         setattr(self, 'model_' + provider.lower(), model)
 
-    def speak(self, prompt: str):
-        """Generates audio from the prompt and plays it using sounddevice."""
-        # Request WAV format specifically for playback compatibility
+    def speak(self, prompt: str,
+              chunk_size: int = None,
+              split_chars: str = "。．.!！?？\n",
+              chunk_overflow: str = "extend"):
+        """Generates audio from the prompt and plays it using sounddevice.
+
+        When ``chunk_size`` is a positive integer, the text is split into
+        chunks (see :meth:`split_text`) and the generated audio of every chunk
+        is concatenated before playback.
+        """
         self.error = False
-        wav_bytes = self.get_wav(prompt, fmt='wav')
+
+        if chunk_size is None:
+            # Request WAV format specifically for playback compatibility
+            wav_bytes = self.get_wav(prompt, fmt='wav')
+        else:
+            wav_bytes = self._get_chunked_wav(
+                prompt, chunk_size, split_chars, chunk_overflow)
+
         if self.error or not wav_bytes:
             return
 
@@ -71,10 +85,18 @@ class Prompt(multiai.Prompt):
             self.error = True
             self.error_message = f"Playback error: {e}"
 
-    def save_tts(self, prompt: str, filename: str):
+    def save_tts(self, prompt: str, filename: str,
+                 chunk_size: int = None,
+                 split_chars: str = "。．.!！?？\n",
+                 chunk_overflow: str = "extend"):
         """
         Generates audio and saves it to a file.
         Automatically handles format conversion based on file extension.
+
+        When ``chunk_size`` is a positive integer, the text is split into
+        chunks (see :meth:`split_text`), each chunk is synthesized as WAV and
+        the results are concatenated before being written/converted to
+        ``filename``.
         """
         # Determine format from extension
         _, ext = os.path.splitext(filename)
@@ -82,8 +104,22 @@ class Prompt(multiai.Prompt):
         if not fmt:
             fmt = 'wav'
 
-        # Fetch audio bytes (OpenAI attempts native format, Google returns WAV)
         self.error = False
+
+        if chunk_size is not None:
+            # Chunked mode: always synthesize WAV, concatenate, then convert.
+            wav_bytes = self._get_chunked_wav(
+                prompt, chunk_size, split_chars, chunk_overflow)
+            if self.error or not wav_bytes:
+                return
+            try:
+                self._save_wav_as(wav_bytes, filename, fmt)
+            except Exception as e:
+                self.error = True
+                self.error_message = f"Failed to save/convert audio: {str(e)}"
+            return
+
+        # Fetch audio bytes (OpenAI attempts native format, Google returns WAV)
         audio_bytes = self.get_wav(prompt, fmt=fmt)
 
         if self.error or not audio_bytes:
@@ -132,6 +168,141 @@ class Prompt(multiai.Prompt):
         except Exception as e:
             self.error = True
             self.error_message = f"Failed to save/convert audio: {str(e)}"
+
+    def split_text(self, text: str, chunk_size: int,
+                   split_chars: str = "。．.!！?？\n",
+                   chunk_overflow: str = "extend"):
+        """Split ``text`` into chunks no longer than ``chunk_size`` characters.
+
+        Within each ``chunk_size`` window the split position is the position
+        immediately after the last (rightmost) character contained in
+        ``split_chars``. When no such character exists in the window the
+        behaviour is controlled by ``chunk_overflow``:
+
+        - ``"extend"`` keeps reading past ``chunk_size`` until the next
+          ``split_chars`` character is found (or the end of the text);
+        - ``"error"`` sets ``self.error`` and ``self.error_message`` and
+          returns ``None``.
+
+        Returns the list of chunks, or ``None`` on error.
+        """
+        self.error = False
+        if chunk_overflow not in ("extend", "error"):
+            self.error = True
+            self.error_message = (
+                "multiai-tts system error: chunk_overflow must be "
+                f'"extend" or "error", got "{chunk_overflow}".')
+            return None
+
+        if not isinstance(chunk_size, int) or chunk_size <= 0:
+            self.error = True
+            self.error_message = (
+                "multiai-tts system error: chunk_size must be a positive "
+                f"integer, got {chunk_size!r}.")
+            return None
+
+        chunks = []
+        remaining = text
+        while remaining:
+            if len(remaining) <= chunk_size:
+                chunks.append(remaining)
+                break
+
+            window = remaining[:chunk_size]
+            split_pos = -1
+            for i in range(len(window) - 1, -1, -1):
+                if window[i] in split_chars:
+                    split_pos = i
+                    break
+
+            if split_pos != -1:
+                cut = split_pos + 1
+            elif chunk_overflow == "error":
+                self.error = True
+                self.error_message = (
+                    "multiai-tts error: no split character found within "
+                    f"chunk_size={chunk_size}.")
+                return None
+            else:  # extend: search beyond chunk_size
+                cut = len(remaining)
+                for i in range(chunk_size, len(remaining)):
+                    if remaining[i] in split_chars:
+                        cut = i + 1
+                        break
+
+            chunks.append(remaining[:cut])
+            remaining = remaining[cut:]
+
+        return chunks
+
+    def _get_chunked_wav(self, prompt, chunk_size, split_chars, chunk_overflow):
+        """Split the prompt, synthesize each chunk as WAV and concatenate.
+
+        Returns the combined WAV bytes, or ``None`` on error (with
+        ``self.error`` set).
+        """
+        chunks = self.split_text(
+            prompt, chunk_size, split_chars, chunk_overflow)
+        if self.error or not chunks:
+            return None
+
+        wav_list = []
+        for chunk in chunks:
+            wav_bytes = self.get_wav(chunk, fmt='wav')
+            if self.error or not wav_bytes:
+                return None
+            wav_list.append(wav_bytes)
+
+        try:
+            return self._combine_wav(wav_list)
+        except Exception as e:
+            self.error = True
+            self.error_message = f"Failed to combine audio: {str(e)}"
+            return None
+
+    def _combine_wav(self, wav_list):
+        """Concatenate a list of WAV byte strings into a single WAV byte string.
+
+        Concatenation is done in memory using ``soundfile``; no silence is
+        inserted between chunks.
+        """
+        import numpy as np
+
+        if len(wav_list) == 1:
+            return wav_list[0]
+
+        arrays = []
+        samplerate = None
+        for wav_bytes in wav_list:
+            data, sr = sf.read(io.BytesIO(wav_bytes))
+            if samplerate is None:
+                samplerate = sr
+            arrays.append(data)
+
+        combined = np.concatenate(arrays)
+        out = io.BytesIO()
+        sf.write(out, combined, samplerate, format='WAV')
+        return out.getvalue()
+
+    def _save_wav_as(self, wav_bytes, filename, fmt):
+        """Write WAV bytes to ``filename``, converting via ffmpeg if needed."""
+        if fmt == 'wav':
+            with open(filename, "wb") as f:
+                f.write(wav_bytes)
+            return
+
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+            tmp.write(wav_bytes)
+            tmp_path = tmp.name
+        try:
+            subprocess.run(
+                ["ffmpeg", "-y", "-i", tmp_path, filename],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        finally:
+            os.remove(tmp_path)
 
     def get_wav(self, prompt: str, fmt: str = 'wav'):
         """Dispatch method to generate audio bytes using the selected provider."""

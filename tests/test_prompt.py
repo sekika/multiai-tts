@@ -100,5 +100,91 @@ class TestTTSPrompt(unittest.TestCase):
 
         mock_synth.speak_text_async.assert_called_once_with("Hello Azure")
 
+    def test_split_text_basic(self):
+        """Split at the rightmost split char within chunk_size."""
+        text = "あいう。えお。かきくけこ。"
+        chunks = self.client.split_text(text, chunk_size=5)
+        self.assertFalse(self.client.error)
+        # "あいう。" fits within 5 and ends at the rightmost "。"
+        self.assertEqual(chunks[0], "あいう。")
+        self.assertEqual("".join(chunks), text)
+
+    def test_split_text_no_split_remaining_fits(self):
+        """Text shorter than chunk_size yields a single chunk."""
+        chunks = self.client.split_text("hello", chunk_size=100)
+        self.assertFalse(self.client.error)
+        self.assertEqual(chunks, ["hello"])
+
+    def test_split_text_overflow_extend(self):
+        """No split char within chunk_size: read until the next one."""
+        text = "abcdefghij.kl"
+        chunks = self.client.split_text(
+            text, chunk_size=5, split_chars=".", chunk_overflow="extend")
+        self.assertFalse(self.client.error)
+        self.assertEqual(chunks[0], "abcdefghij.")
+        self.assertEqual("".join(chunks), text)
+
+    def test_split_text_overflow_extend_to_end(self):
+        """No split char anywhere: whole text is one chunk."""
+        text = "abcdefghij"
+        chunks = self.client.split_text(
+            text, chunk_size=5, split_chars=".", chunk_overflow="extend")
+        self.assertFalse(self.client.error)
+        self.assertEqual(chunks, ["abcdefghij"])
+
+    def test_split_text_overflow_error(self):
+        """No split char within chunk_size and overflow='error' sets error."""
+        chunks = self.client.split_text(
+            "abcdefghij", chunk_size=5, split_chars=".",
+            chunk_overflow="error")
+        self.assertIsNone(chunks)
+        self.assertTrue(self.client.error)
+        self.assertIn("split character", self.client.error_message)
+
+    def test_split_text_invalid_overflow(self):
+        """Invalid chunk_overflow value sets error."""
+        chunks = self.client.split_text(
+            "abc", chunk_size=5, chunk_overflow="bogus")
+        self.assertIsNone(chunks)
+        self.assertTrue(self.client.error)
+
+    def test_split_text_invalid_chunk_size(self):
+        """Non-positive chunk_size sets error."""
+        chunks = self.client.split_text("abc", chunk_size=0)
+        self.assertIsNone(chunks)
+        self.assertTrue(self.client.error)
+
+    @patch('multiai_tts.prompt.OpenAI')
+    def test_save_tts_chunked(self, MockOpenAI):
+        """Chunked save_tts synthesizes each chunk and concatenates WAVs."""
+        import io as _io
+        import wave
+
+        def make_wav(nframes):
+            buf = _io.BytesIO()
+            with wave.open(buf, 'wb') as w:
+                w.setnchannels(1)
+                w.setsampwidth(2)
+                w.setframerate(24000)
+                w.writeframes(b'\x00\x00' * nframes)
+            return buf.getvalue()
+
+        mock_client = MockOpenAI.return_value
+        # Each call returns a small WAV
+        mock_client.audio.speech.create.return_value = MagicMock(
+            content=make_wav(10))
+
+        self.client.set_tts_model('openai', 'tts-model')
+        text = "abc.def.ghi"
+        self.client.save_tts(
+            text, "out.wav", chunk_size=4, split_chars=".")
+
+        self.assertFalse(self.client.error)
+        # "abc." / "def." / "ghi" => 3 chunks => 3 synth calls
+        self.assertEqual(mock_client.audio.speech.create.call_count, 3)
+        import os as _os
+        self.assertTrue(_os.path.exists("out.wav"))
+        _os.remove("out.wav")
+
 if __name__ == '__main__':
     unittest.main()

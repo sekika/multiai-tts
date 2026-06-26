@@ -23,7 +23,7 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/sekika/multiai-tts"
+"Homepage" = "https://sekika.github.io/multiai-tts/"
 "Bug Tracker" = "https://github.com/sekika/multiai-tts/issues"
 
 [build-system]
