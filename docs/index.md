@@ -2,21 +2,36 @@
 
 `multiai-tts` is an extension library for [multiai](https://sekika.github.io/multiai/) that provides Text-to-Speech (TTS) capabilities using OpenAI, Google GenAI, and Azure Speech.
 
+
+## Table of Contents
+
+- [Supported AI providers](#supported-ai-providers)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Google GenAI Example](#google-genai-example)
+  - [OpenAI Example](#openai-example)
+  - [Azure TTS Example](#azure-tts-example)
+  - [Notes](#notes)
+- [Long text (automatic chunking)](#long-text-automatic-chunking)
+
+## Supported AI providers
+
 | Provider | Strengths | Docs |
 |----------|-----------|------|
-| [OpenAI](https://platform.openai.com/docs/guides/text-to-speech) | Simple API | [Voices](https://platform.openai.com/docs/guides/text-to-speech#voice-options) · [API](https://platform.openai.com/docs/api-reference/audio/createSpeech) |
-| [Google GenAI](https://ai.google.dev/gemini-api/docs/audio) | Emotion tags, multi-speaker | [Voices](https://ai.google.dev/gemini-api/docs/audio#voices) · [API](https://ai.google.dev/api/generate-content) |
+| [OpenAI](https://platform.openai.com/docs/guides/text-to-speech) | Simple API | [Models](https://developers.openai.com/api/docs/models) · [Voices](https://platform.openai.com/docs/guides/text-to-speech#voice-options) · [API](https://platform.openai.com/docs/api-reference/audio/createSpeech) |
+| [Google GenAI](https://ai.google.dev/gemini-api/docs/audio) | Emotion tags, multi-speaker | [Models](https://ai.google.dev/gemini-api/docs/models?hl=ja#audio_models) · [Voices](https://ai.google.dev/gemini-api/docs/audio#voices) · [API](https://ai.google.dev/api/generate-content) |
 | [Azure Speech](https://learn.microsoft.com/azure/ai-services/speech-service/text-to-speech) | SSML, extensive voice selection | [Voices](https://learn.microsoft.com/azure/ai-services/speech-service/language-support?tabs=tts) · [API](https://learn.microsoft.com/azure/ai-services/speech-service/rest-text-to-speech) |
 
 ## Prerequisites
 
-**API Key Configuration**
+**API key configuration**
 
 This library relies on the configuration provided by `multiai`. You must set up your API keys (OpenAI API Key, Google API Key, Azure TTS Key and Region) using `multiai`'s configuration files or environment variables before using this library.
 
 For details on how to configure API keys, please refer to the **[multiai documentation](https://sekika.github.io/multiai/)**.
 
-**System Requirements**
+**System requirements**
 
 - `ffmpeg` must be installed if you want to save audio in formats other than WAV (e.g., MP3).
 
@@ -28,14 +43,14 @@ pip install multiai-tts
 
 ## Usage
 
-### Google GenAI Example
+### Google GenAI example
 
 ```python
 import sys
 import multiai_tts
 
 client = multiai_tts.Prompt()
-client.set_tts_model('google', 'gemini-2.5-flash-preview-tts')
+client.set_tts_model('google', 'gemini-3.1-flash-tts-preview')
 client.tts_voice_google = 'charon'
 
 # Speak directly
@@ -51,7 +66,7 @@ if client.error:
     sys.exit(1)
 ```
 
-### OpenAI Example
+### OpenAI example
 
 ```python
 import sys
@@ -74,7 +89,7 @@ if client.error:
     sys.exit(1)
 ```
 
-### Azure TTS Example
+### Azure TTS example
 
 ```python
 import sys
@@ -96,6 +111,15 @@ if client.error:
     print(client.error_message)
     sys.exit(1)
 ```
+
+### Notes
+
+* For OpenAI and Google TTS, use `set_tts_model(provider, model)` to select both provider and model.
+* For Azure, `set_tts_provider('azure')` is sufficient; the model parameter is not used.
+* In Google’s example, the prompt includes “Please speak the following.” In the OpenAI and Azure examples, it does not. Whether you include this phrase depends on the model you use.
+* `Prompt.get_wav()` fetches the raw audio data in memory. Playback is separate from retrieval.
+* Error handling: After `speak()` or `save_tts()`, always check `client.error` and `client.error_message`.
+* WAV output is default; `ffmpeg` is used for converting to other formats.
 
 ## Long text (automatic chunking)
 
@@ -134,12 +158,3 @@ chunks = client.split_text(long_text, chunk_size=1000)
   exceed `chunk_size`.
 * Per-provider API character limits are not managed by this library — you are
   responsible for choosing an appropriate `chunk_size`.
-
-## Notes
-
-* For OpenAI and Google TTS, use `set_tts_model(provider, model)` to select both provider and model.
-* For Azure, `set_tts_provider('azure')` is sufficient; the model parameter is not used.
-* In Google’s example, the prompt includes “Please speak the following.” In the OpenAI and Azure examples, it does not. Whether you include this phrase depends on the model you use.
-* `Prompt.get_wav()` fetches the raw audio data in memory. Playback is separate from retrieval.
-* Error handling: After `speak()` or `save_tts()`, always check `client.error` and `client.error_message`.
-* WAV output is default; `ffmpeg` is used for converting to other formats.
