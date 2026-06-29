@@ -264,13 +264,13 @@ class Prompt(multiai.Prompt):
         Returns the combined WAV bytes, or ``None`` on error (with
         ``self.error`` set).
         """
-        chunks = self.split_text(
+        self.chunks = self.split_text(
             text, chunk_size, split_chars, chunk_overflow)
-        if self.error or not chunks:
+        if self.error or not self.chunks:
             return None
 
         wav_list = []
-        for chunk in chunks:
+        for chunk in self.chunks:
             wav_bytes = self.get_wav(chunk, fmt='wav', prompt=prompt)
             if self.error or not wav_bytes:
                 return None
