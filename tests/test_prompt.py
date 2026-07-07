@@ -100,6 +100,70 @@ class TestTTSPrompt(unittest.TestCase):
 
         mock_synth.speak_text_async.assert_called_once_with("Hello Azure")
 
+    @patch('multiai_tts.prompt.requests')
+    def test_get_wav_voicevox(self, mock_requests):
+        """Mock VOICEVOX engine: /audio_query then /synthesis."""
+        import requests as real_requests
+        mock_requests.exceptions = real_requests.exceptions
+
+        query_resp = MagicMock()
+        query_resp.json.return_value = {"accent_phrases": []}
+        synth_resp = MagicMock()
+        synth_resp.content = b'voicevox_wav'
+        mock_requests.post.side_effect = [query_resp, synth_resp]
+
+        self.client.set_tts_provider('voicevox')
+        self.client.tts_voice_voicevox = 3
+        wav = self.client.get_wav("こんにちは")
+
+        self.assertFalse(self.client.error)
+        self.assertEqual(wav, b'voicevox_wav')
+
+        # Two calls: audio_query and synthesis
+        self.assertEqual(mock_requests.post.call_count, 2)
+        query_call, synth_call = mock_requests.post.call_args_list
+
+        self.assertTrue(query_call.args[0].endswith('/audio_query'))
+        self.assertEqual(query_call.kwargs['params'],
+                         {"text": "こんにちは", "speaker": 3})
+
+        self.assertTrue(synth_call.args[0].endswith('/synthesis'))
+        self.assertEqual(synth_call.kwargs['params'], {"speaker": 3})
+        self.assertEqual(synth_call.kwargs['json'], {"accent_phrases": []})
+
+    @patch('multiai_tts.prompt.requests')
+    def test_voicevox_connection_error(self, mock_requests):
+        """Engine not reachable: error is set, no exception escapes."""
+        import requests as real_requests
+        mock_requests.exceptions = real_requests.exceptions
+        mock_requests.post.side_effect = real_requests.exceptions.ConnectionError()
+
+        self.client.set_tts_provider('voicevox')
+        wav = self.client.get_wav("test")
+
+        self.assertIsNone(wav)
+        self.assertTrue(self.client.error)
+        self.assertIn("not reachable", self.client.error_message)
+
+    @patch('multiai_tts.prompt.requests')
+    def test_voicevox_http_error(self, mock_requests):
+        """HTTP error from the engine sets error."""
+        import requests as real_requests
+        mock_requests.exceptions = real_requests.exceptions
+
+        query_resp = MagicMock()
+        err = real_requests.exceptions.HTTPError()
+        err.response = MagicMock(status_code=422, text="bad speaker")
+        query_resp.raise_for_status.side_effect = err
+        mock_requests.post.return_value = query_resp
+
+        self.client.set_tts_provider('voicevox')
+        wav = self.client.get_wav("test")
+
+        self.assertIsNone(wav)
+        self.assertTrue(self.client.error)
+        self.assertIn("422", self.client.error_message)
+
     def test_split_text_basic(self):
         """Split at the rightmost split char within chunk_size."""
         text = "あいう。えお。かきくけこ。"

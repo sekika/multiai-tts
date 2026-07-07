@@ -1,6 +1,6 @@
 # multiai-tts
 
-`multiai-tts` is an extension library for [multiai](https://sekika.github.io/multiai/) that provides Text-to-Speech (TTS) capabilities using OpenAI, Google GenAI, and Azure Speech.
+`multiai-tts` is an extension library for [multiai](https://sekika.github.io/multiai/) that provides Text-to-Speech (TTS) capabilities using OpenAI, Google GenAI, Azure Speech, and VOICEVOX.
 
 
 ## Table of Contents
@@ -12,6 +12,7 @@
   - [Google GenAI Example](#google-genai-example)
   - [OpenAI Example](#openai-example)
   - [Azure TTS Example](#azure-tts-example)
+  - [VOICEVOX Example](#voicevox-example)
   - [Notes](#notes)
 - [Style prompts](#style-prompts)
 - [Long text (automatic chunking)](#long-text-automatic-chunking)
@@ -23,6 +24,7 @@
 | [OpenAI](https://platform.openai.com/docs/guides/text-to-speech) | Simple API | [Models](https://developers.openai.com/api/docs/models) · [Voices](https://platform.openai.com/docs/guides/text-to-speech#voice-options) · [API](https://platform.openai.com/docs/api-reference/audio/createSpeech) |
 | [Google GenAI](https://ai.google.dev/gemini-api/docs/audio) | Emotion tags, multi-speaker | [Models](https://ai.google.dev/gemini-api/docs/models?hl=ja#audio_models) · [Voices](https://ai.google.dev/gemini-api/docs/audio#voices) · [API](https://ai.google.dev/api/generate-content) |
 | [Azure Speech](https://learn.microsoft.com/azure/ai-services/speech-service/text-to-speech) | SSML, extensive voice selection | [Voices](https://learn.microsoft.com/azure/ai-services/speech-service/language-support?tabs=tts) · [API](https://learn.microsoft.com/azure/ai-services/speech-service/rest-text-to-speech) |
+| [VOICEVOX](https://voicevox.hiroshiba.jp/) | Local engine, no API key, Japanese voices | [Voices](https://site-builder.wiki/posts/64100) · [API](https://voicevox.github.io/voicevox_engine/api/) |
 
 Install [multiai](https://sekika.github.io/multiai/) and run
 - `ai --list -o | grep tts` to display OpenAI's TTS models
@@ -36,9 +38,12 @@ This library relies on the configuration provided by `multiai`. You must set up 
 
 For details on how to configure API keys, please refer to the **[multiai documentation](https://sekika.github.io/multiai/)**.
 
+VOICEVOX does not require an API key. Instead, the [VOICEVOX engine](https://voicevox.hifiman.jp/) must be running locally (default `http://127.0.0.1:50021`).
+
 **System requirements**
 
 - `ffmpeg` must be installed if you want to save audio in formats other than WAV (e.g., MP3).
+- The VOICEVOX engine must be running to use the VOICEVOX provider.
 
 ## Installation
 
@@ -117,10 +122,39 @@ if client.error:
     sys.exit(1)
 ```
 
+### VOICEVOX example
+
+[VOICEVOX](https://voicevox.hifiman.jp/) runs as a **local engine** (default
+`http://127.0.0.1:50021`) and must already be running. No API key is required.
+The speaker is selected by its integer style ID via `tts_voice_voicevox`.
+
+```python
+import sys
+import multiai_tts
+
+client = multiai_tts.Prompt()
+client.set_tts_provider('voicevox')
+client.tts_voice_voicevox = 3          # speaker style ID
+# client.tts_voicevox_url = "http://127.0.0.1:50021"  # default; override if needed
+
+# Speak directly
+client.speak("こんにちは。VOICEVOX のテストです。")
+if client.error:
+    print(client.error_message)
+    sys.exit(1)
+
+# Save to file
+client.save_tts("音声をファイルに保存します。", "output_voicevox.mp3")
+if client.error:
+    print(client.error_message)
+    sys.exit(1)
+```
+
 ### Notes
 
 * For OpenAI and Google TTS, use `set_tts_model(provider, model)` to select both provider and model.
 * For Azure, `set_tts_provider('azure')` is sufficient; the model parameter is not used.
+* For VOICEVOX, `set_tts_provider('voicevox')` is sufficient; no API key or model is used. The engine must already be running — if it is not reachable, `client.error` is set with a message asking whether the engine is running.
 * In Google’s example, the prompt includes “Please speak the following.” In the OpenAI and Azure examples, it does not. Whether you include this phrase depends on the model you use.
 * `Prompt.get_wav()` fetches the raw audio data in memory. Playback is separate from retrieval.
 * Error handling: After `speak()` or `save_tts()`, always check `client.error` and `client.error_message`.

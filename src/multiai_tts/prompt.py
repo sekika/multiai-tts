@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 import sounddevice as sd
 import soundfile as sf
+import requests
 from openai import OpenAI
 from google import genai
 import azure.cognitiveservices.speech as speechsdk
@@ -38,6 +39,9 @@ class Prompt(multiai.Prompt):
         self.tts_voice_google = 'charon'
         self.tts_framerate_google = 24000
         self.tts_voice_azure = 'en-US-AriaNeural'
+        self.tts_voice_voicevox = 1
+        self.tts_voicevox_url = 'http://127.0.0.1:50021'
+        self.tts_voicevox_timeout = 60
 
     def set_tts_provider(self, provider):
         """Sets the active TTS provider."""
@@ -491,6 +495,68 @@ class Prompt(multiai.Prompt):
             self.handle_error(e)
             self.wav = None
 
+    def get_wav_voicevox(self):
+        """Fetch WAV bytes from a locally running VOICEVOX engine.
+
+        The engine is assumed to be already running (default
+        ``http://127.0.0.1:50021``). Synthesis is a two-step call:
+        ``/audio_query`` builds the query from the text and speaker, then
+        ``/synthesis`` returns the WAV audio. On any failure (engine not
+        reachable, timeout, HTTP error, empty audio) no exception is raised;
+        ``self.error`` and ``self.error_message`` are set and ``self.wav`` is
+        cleared.
+        """
+        url = self.tts_voicevox_url.rstrip('/')
+        speaker = self.tts_voice_voicevox
+        timeout = self.tts_voicevox_timeout
+
+        try:
+            query_resp = requests.post(
+                f"{url}/audio_query",
+                params={"text": self.prompt, "speaker": speaker},
+                timeout=timeout,
+            )
+            query_resp.raise_for_status()
+            query = query_resp.json()
+
+            synth_resp = requests.post(
+                f"{url}/synthesis",
+                params={"speaker": speaker},
+                json=query,
+                timeout=timeout,
+            )
+            synth_resp.raise_for_status()
+
+            if not synth_resp.content:
+                self.error = True
+                self.error_message = "No audio data returned from VOICEVOX."
+                self.wav = None
+                return
+
+            self.wav = synth_resp.content
+            self.error = False
+
+        except requests.exceptions.ConnectionError:
+            self.error = True
+            self.error_message = (
+                f"VOICEVOX engine is not reachable at {url}. Is it running?")
+            self.wav = None
+        except requests.exceptions.Timeout:
+            self.error = True
+            self.error_message = (
+                f"VOICEVOX request timed out after {timeout}s ({url}).")
+            self.wav = None
+        except requests.exceptions.HTTPError as e:
+            resp = e.response
+            status = resp.status_code if resp is not None else "Error"
+            body = resp.text if resp is not None else str(e)
+            self.error = True
+            self.error_message = f"VOICEVOX HTTP error {status}\n{body}"
+            self.wav = None
+        except Exception as e:
+            self.handle_error(e)
+            self.wav = None
+
     def handle_error(self, e):
         """Parses exception or result details into a readable error message."""
         self.error = True
@@ -555,3 +621,4 @@ class TTS_Provider(enum.Enum):
     OPENAI = enum.auto()
     GOOGLE = enum.auto()
     AZURE = enum.auto()
+    VOICEVOX = enum.auto()

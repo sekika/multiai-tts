@@ -1,8 +1,8 @@
 # multiai-tts
 
-`multiai-tts` is an extension library for [multiai](https://sekika.github.io/multiai/) that provides Text-to-Speech (TTS) capabilities using OpenAI, Google GenAI, and Azure Speech.
+`multiai-tts` is an extension library for [multiai](https://sekika.github.io/multiai/) that provides Text-to-Speech (TTS) capabilities using OpenAI, Google GenAI, Azure Speech, and VOICEVOX.
 
-- One simple interface (`speak()` / `save_tts()`) across OpenAI, Google GenAI, and Azure Speech.
+- One simple interface (`speak()` / `save_tts()`) across OpenAI, Google GenAI, Azure Speech, and VOICEVOX.
 - Save to WAV, MP3, and other formats (via `ffmpeg`).
 - Automatic chunking and joining of long text that exceeds API length limits.
 
