@@ -92,14 +92,29 @@ pip install -U "google-genai>=2.25.0"
 ```
 
 ```python
+import sys
+import multiai_tts
+
 client = multiai_tts.Prompt()
 client.set_tts_model(
     'google', 'gemini-3.8-flash-tts', tts_prompt_mode='speech_metadata')
+client.tts_voice_google = 'Aoede'
+
+# Speak directly
+client.speak("Hello, this is a test from Gemini 3.8 model.")
+if client.error:
+    print(client.error_message)
+    sys.exit(1)
+
+# Save to file
 client.save_tts(
-    script,
-    'output.wav',
+    "Saving this audio to mp3.",
+    "output_gemini_38.mp3",
     prompt='Speak calmly and clearly, like a university instructor.',
 )
+if client.error:
+    print(client.error_message)
+    sys.exit(1)
 ```
 
 `client.tts_prompt_mode = 'speech_metadata'` is an equivalent configuration.
