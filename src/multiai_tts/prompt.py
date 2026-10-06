@@ -2,6 +2,7 @@ import io
 import enum
 import os
 import wave
+import base64
 import multiai
 import subprocess
 import tempfile
@@ -26,6 +27,20 @@ AZURE_ERROR_CODES = {
     8: "Forbidden",
 }
 
+# Gemini 3.8 Interactions API uses these canonical prebuilt voice IDs.  Older
+# callers commonly use the same IDs in lowercase; normalise only these known
+# preset names so custom ``voice_...`` / ``voicekey_...`` IDs remain untouched.
+GOOGLE_TTS_PREBUILT_VOICES = {
+    name.lower(): name for name in (
+        'Zephyr', 'Puck', 'Charon', 'Kore', 'Fenrir', 'Leda', 'Orus',
+        'Aoede', 'Callirrhoe', 'Autonoe', 'Enceladus', 'Iapetus', 'Umbriel',
+        'Algieba', 'Despina', 'Erinome', 'Algenib', 'Rasalgethi',
+        'Laomedeia', 'Achernar', 'Alnilam', 'Schedar', 'Gacrux', 'Pulcherrima',
+        'Achird', 'Zubenelgenubi', 'Vindemiatrix', 'Sadachbia', 'Sadaltager',
+        'Sulafat',
+    )
+}
+
 
 class Prompt(multiai.Prompt):
     """
@@ -38,6 +53,10 @@ class Prompt(multiai.Prompt):
         self.tts_voice_openai = 'marin'
         self.tts_voice_google = 'charon'
         self.tts_framerate_google = 24000
+        # Gemini's older GenerateContent TTS API accepts instructions inline.
+        # Newer models using the Interactions API need them as metadata
+        # instead.
+        self.tts_prompt_mode = 'legacy_inline'
         self.tts_voice_azure = 'en-US-AriaNeural'
         self.tts_voice_voicevox = 1
         self.tts_voicevox_url = 'http://127.0.0.1:50021'
@@ -52,8 +71,23 @@ class Prompt(multiai.Prompt):
             self.error_message = f'multiai-tts system error: TTS provider "{provider}" is not available.'
             return
 
-    def set_tts_model(self, provider, model):
+    @property
+    def tts_prompt_mode(self):
+        return self._tts_prompt_mode
+
+    @tts_prompt_mode.setter
+    def tts_prompt_mode(self, mode):
+        valid_modes = ('legacy_inline', 'speech_metadata')
+        if mode not in valid_modes:
+            raise ValueError(
+                'tts_prompt_mode must be "legacy_inline" or '
+                f'"speech_metadata", got {mode!r}.')
+        self._tts_prompt_mode = mode
+
+    def set_tts_model(self, provider, model, tts_prompt_mode=None):
         """Sets the TTS provider and the specific model to use."""
+        if tts_prompt_mode is not None:
+            self.tts_prompt_mode = tts_prompt_mode
         self.set_tts_provider(provider)
         self.tts_model = model
         setattr(self, 'model_' + provider.lower(), model)
@@ -334,12 +368,16 @@ class Prompt(multiai.Prompt):
     def get_wav(self, text: str, fmt: str = 'wav', prompt: str = ""):
         """Dispatch method to generate audio bytes using the selected provider.
 
-        ``text`` is the spoken body. ``prompt`` is an optional style
-        instruction prepended to the text before synthesis. The same rule is
-        used for every provider; an empty (or ``None``) ``prompt`` leaves the
-        request unchanged.
+        ``text`` is the spoken body. For ordinary providers and legacy Google
+        TTS, ``prompt`` is prepended to it for backward compatibility. Google
+        models configured with ``tts_prompt_mode='speech_metadata'`` receive
+        the body unchanged and the prompt as structured speech metadata.
         """
-        if prompt:
+        use_speech_metadata = (
+            self.tts_provider == TTS_Provider.GOOGLE and
+            self.tts_prompt_mode == 'speech_metadata')
+        self._tts_style = prompt
+        if prompt and not use_speech_metadata:
             self.prompt = f"{prompt}\n\n{text}"
         else:
             self.prompt = text
@@ -392,7 +430,24 @@ class Prompt(multiai.Prompt):
             self.error_message = "Google API key is not set."
             return
 
+        if self.tts_prompt_mode == 'speech_metadata':
+            # google-genai 2.28 normalizes attempts=0 to one retry.  Override
+            # the retryable status codes instead: 429 is deliberately absent,
+            # so quota errors reach the existing error handler immediately.
+            client = genai.Client(
+                api_key=self.google_api_key,
+                http_options=genai.types.HttpOptions(
+                    retry_options=genai.types.HttpRetryOptions(
+                        attempts=1,
+                        http_status_codes=[408, 409, 500, 502, 503, 504],
+                    ),
+                ),
+            )
+            self._get_wav_google_speech_metadata(client)
+            return
+
         client = genai.Client(api_key=self.google_api_key)
+
         config = genai.types.GenerateContentConfig(
             response_modalities=["AUDIO"],
             speech_config=genai.types.SpeechConfig(
@@ -442,6 +497,54 @@ class Prompt(multiai.Prompt):
                 self.error_message = msg
 
         except Exception as e:
+            self.handle_error(e)
+
+    def _get_wav_google_speech_metadata(self, client):
+        """Fetch Gemini Interactions TTS audio without altering the script.
+
+        The Interactions endpoint returns a complete WAV payload.  In
+        particular, do not run it through the legacy raw-PCM WAV wrapper.
+        The client excludes HTTP 429 from its retryable status codes, so a
+        rate-limit response reaches the existing error handler immediately.
+        """
+        interactions = getattr(client, 'interactions', None)
+        create = getattr(interactions, 'create', None)
+        if not callable(create):
+            self.error = True
+            self.wav = None
+            self.error_message = (
+                'Google GenAI SDK does not support the current Interactions '
+                'API schema. Upgrade to google-genai>=2.25.0 (for example, '
+                'run "pip install -U google-genai").')
+            return
+
+        content = {'type': 'text', 'text': self.prompt}
+        if self._tts_style:
+            content['annotations'] = [{
+                'type': 'speech_metadata',
+                'style': self._tts_style,
+            }]
+
+        try:
+            voice = GOOGLE_TTS_PREBUILT_VOICES.get(
+                str(self.tts_voice_google).lower(), self.tts_voice_google)
+            interaction = create(
+                model=self.model_google,
+                input=[{'type': 'user_input', 'content': [content]}],
+                response_format={'type': 'audio'},
+                generation_config={
+                    'speech_config': [{'voice': voice}],
+                },
+            )
+            encoded_audio = interaction.output_audio.data
+            if not encoded_audio:
+                raise ValueError('No audio data returned from Google.')
+            self.wav = base64.b64decode(encoded_audio)
+            if not self.wav:
+                raise ValueError('No audio data returned from Google.')
+            self.error = False
+        except Exception as e:
+            self.wav = None
             self.handle_error(e)
 
     def get_wav_azure(self, fmt: str = 'wav'):

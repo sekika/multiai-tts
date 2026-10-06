@@ -10,6 +10,7 @@
 - [Installation](#installation)
 - [Usage](#usage)
   - [Google GenAI Example](#google-genai-example)
+  - [Gemini 3.8 TTS Example](#gemini-38-tts-example)
   - [OpenAI Example](#openai-example)
   - [Azure TTS Example](#azure-tts-example)
   - [VOICEVOX Example](#voicevox-example)
@@ -75,6 +76,47 @@ if client.error:
     print(client.error_message)
     sys.exit(1)
 ```
+
+### Gemini 3.8 TTS example
+
+Gemini 3.8 treats `text` as a verbatim script. Select the structured prompt
+mode so a style instruction is sent as `speech_metadata.style` rather than
+being read aloud as part of the script.
+
+This mode uses the current Interactions API schema and requires
+`google-genai>=2.25.0` and Python 3.10 or later. A normal reinstall or upgrade
+of this package resolves the dependency; in an existing environment, run:
+
+```bash
+pip install -U "google-genai>=2.25.0"
+```
+
+```python
+client = multiai_tts.Prompt()
+client.set_tts_model(
+    'google', 'gemini-3.8-flash-tts', tts_prompt_mode='speech_metadata')
+client.save_tts(
+    script,
+    'output.wav',
+    prompt='Speak calmly and clearly, like a university instructor.',
+)
+```
+
+`client.tts_prompt_mode = 'speech_metadata'` is an equivalent configuration.
+The default, `legacy_inline`, preserves the older Gemini request format.
+
+The familiar prebuilt voice IDs are still accepted in this mode. For example,
+set `client.tts_voice_google = 'Aoede'` before `save_tts()`. Lowercase legacy
+preset names such as `'aoede'` are normalised automatically. To choose a voice
+by an explicit gender classification, use the Gemini Voice Library to obtain
+its `voice_...` ID, then assign that ID to `tts_voice_google`; custom voice IDs
+are passed through unchanged.
+
+If Gemini rejects a request due to rate limiting, `multiai-tts` reports that
+API error immediately. It does not silently wait through the SDK's automatic
+retry/backoff cycle: structured Gemini requests disable retries on the
+Interactions request itself. Check `client.error_message` and retry the job
+only after the project quota is available again.
 
 ### OpenAI example
 
@@ -175,6 +217,11 @@ client.speak(
 
 The prompt is prepended to the text before synthesis, using the same rule for
 every provider — whether a style prompt helps and how to phrase it is up to you.
+
+For Google models configured with `tts_prompt_mode='speech_metadata'` (such as
+Gemini 3.8), this is deliberately different: the text is sent unchanged and
+the prompt is sent as structured style metadata. Keep `prompt` to a pure style
+instruction in that mode; it must not contain headings or a copy of the script.
 
 When the text is chunked (see below), the prompt is **re-applied to every
 chunk** so the style stays consistent across the whole audio. Because the

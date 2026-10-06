@@ -1,9 +1,11 @@
 [project]
 name = "multiai-tts"
-version = "0.4.0"
+version = "0.5.0"
 description = "TTS extension for multiai using OpenAI, Google GenAI and Azure Speech"
 readme = "README.md"
-requires-python = ">=3.8"
+# google-genai 2.x (required by the Gemini Interactions API) supports Python
+# 3.10 and later.
+requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
     {name = "Katsutoshi Seki"}
@@ -16,7 +18,8 @@ classifiers = [
 dependencies = [
     "multiai",
     "openai",
-    "google-genai",
+    # Gemini 3.8 TTS の現行 Interactions API スキーマには 2.25.0 以降が必要。
+    "google-genai>=2.25.0",
     "azure-cognitiveservices-speech",
     "sounddevice",
     "soundfile",

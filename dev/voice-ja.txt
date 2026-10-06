@@ -1,0 +1,118 @@
+
+[female] 61 voices
+id	display name	language	accent	pitch	description
+ja-jp-advisor-11	Authoritative Advisor 11	ja-JP	Tokyo Japanese	high	62-year-old Researcher from Tokyo. Speaks Tokyo Japanese. Voice is cool, confident, and collaborative.
+ja-jp-advisor-12	Authoritative Advisor 12	ja-JP	Tokyo Japanese	high	50-year-old Doctor from Tokyo. Speaks Tokyo Japanese. Voice is natural and clear.
+ja-jp-advisor-2	Authoritative Advisor 2	ja-JP	Tokyo Japanese	low	37-year-old Doctor from Tokyo. Speaks Tokyo Japanese. Currently sitting next to you on the bus. Sounds confident and clear.
+ja-jp-advisor-4	Authoritative Advisor 4	ja-JP	Osaka Japanese	medium	41-year-old Lawyer from Osaka. Speaks Osaka Japanese. Currently on npr. Voice is warm and engaging.
+ja-jp-advisor-5	Authoritative Advisor 5	ja-JP	Tokyo Japanese	high	25-year-old Researcher from Tokyo. Speaks Tokyo Japanese. Currently brainstorming in a meeting. Sounds confident and clear.
+ja-jp-advisor-7	Authoritative Advisor 7	ja-JP	Tokyo Japanese	high	39-year-old Lawyer from Tokyo. Speaks Tokyo Japanese. Tone is objective, direct, and helpful
+ja-jp-assistant-1	Digital Assistant 1	ja-JP	Tokyo Japanese	high	36-year-old Parent from Tokyo. Speaks Tokyo Japanese. Voice is textured, resonant, and soothing.
+ja-jp-assistant-4	Digital Assistant 4	ja-JP	Tokyo Japanese	medium	22-year-old Best Friend from Tokyo. Speaks Tokyo Japanese. Currently sitting on couch. Sounds confident and clear.
+ja-jp-assistant-5	Digital Assistant 5	ja-JP	Osaka Japanese	low	30-year-old Friend from Osaka. Speaks Osaka Japanese. Currently in an indie film. Tone is professional yet approachable.
+ja-jp-assistant-6	Digital Assistant 6	ja-JP	Tokyo Japanese	medium	74-year-old Grandparent from Tokyo. Speaks Tokyo Japanese. Currently on podcast. Tone is professional yet approachable.
+ja-jp-assistant-7	Digital Assistant 7	ja-JP	Tokyo Japanese	high	31-year-old Friend from Tokyo. Speaks Tokyo Japanese. Voice is bright, breezy, and youthful.
+ja-jp-assistant-8	Digital Assistant 8	ja-JP	Osaka Japanese	high	24-year-old Sibling from Osaka. Speaks Osaka Japanese. Voice is laid-back, encouraging, and chill.
+ja-jp-commercial-1	Commercial Voiceover 1	ja-JP	Tokyo Japanese	high	21-year-old Influencer from Tokyo. Speaks Tokyo Japanese. Voice is deep, velvety, and unhurried.
+ja-jp-commercial-3	Commercial Voiceover 3	ja-JP	Tokyo Japanese	high	28-year-old Influencer from Tokyo. Speaks Tokyo Japanese. Voice is highly approachable.
+ja-jp-commercial-6	Commercial Voiceover 6	ja-JP	Tokyo Japanese	high	25-year-old Influencer from Tokyo. Speaks Tokyo Japanese. Currently in an oscar winning film. Sounds confident and clear.
+ja-jp-commercial-7	Commercial Voiceover 7	ja-JP	Osaka Japanese	high	23-year-old Influencer from Osaka. Speaks Osaka Japanese. Voice is deep, velvety, and unhurried.
+ja-jp-concierge-1	Concierge 1	ja-JP	Tokyo Japanese	high	30-year-old Executive Assistant from Tokyo. Speaks Tokyo Japanese. Currently at an appointment. Tone is professional yet approachable.
+ja-jp-concierge-10	Concierge 10	ja-JP	Osaka Japanese	high	57-year-old Executive Assistant from Osaka. Speaks Osaka Japanese. Currently at an appointment. Tone is professional yet approachable.
+ja-jp-concierge-11	Concierge 11	ja-JP	Fukuoka Japanese	high	63-year-old Event Planner from Fukuoka. Speaks Fukuoka Japanese. Currently at a meditation retreat. Tone is professional yet approachable.
+ja-jp-concierge-3	Concierge 3	ja-JP	Osaka Japanese	low	30-year-old Executive Assistant from Osaka. Speaks Osaka Japanese. Currently on the phone. Tone is professional yet approachable.
+ja-jp-concierge-5	Concierge 5	ja-JP	Tokyo Japanese	high	38-year-old Hotel Concierge from Tokyo. Speaks Tokyo Japanese. Voice is engaging and empathic.
+ja-jp-concierge-7	Concierge 7	ja-JP	Tokyo Japanese	medium	24-year-old Tour Guide from Tokyo. Speaks Tokyo Japanese. Tone is reflective, calm, and reassuring
+ja-jp-csagent-11	Call Center Agent 11	ja-JP	Tokyo Japanese	high	32-year-old Customer Service Agent from Tokyo. Speaks Tokyo Japanese. Currently in an indie film. Voice is warm and engaging.
+ja-jp-csagent-12	Call Center Agent 12	ja-JP	Tokyo Japanese	low	59-year-old Customer Service Agent from Tokyo. Speaks Tokyo Japanese. Currently sitting on couch. Sounds confident and clear.
+ja-jp-csagent-2	Call Center Agent 2	ja-JP	Osaka Japanese	high	23-year-old Customer Service Agent from Osaka. Speaks Osaka Japanese. Voice is natural and clear.
+ja-jp-csagent-4	Call Center Agent 4	ja-JP	Tokyo Japanese	medium	64-year-old Customer Service Agent from Tokyo. Speaks Tokyo Japanese. Voice is natural and clear.
+ja-jp-csagent-6	Call Center Agent 6	ja-JP	Osaka Japanese	medium	35-year-old Customer Service Agent from Osaka. Speaks Osaka Japanese. Currently in a bookstore. Tone is professional yet approachable.
+ja-jp-csagent-8	Call Center Agent 8	ja-JP	Tokyo Japanese	high	23-year-old Sales Associate from Tokyo. Speaks Tokyo Japanese. Currently in an oscar winning film. Voice is warm and engaging.
+ja-jp-podcaster-10	Podcaster 10	ja-JP	Tokyo Japanese	medium	56-year-old Radio Host from Tokyo. Speaks Tokyo Japanese. Voice is light, airy, and precise
+ja-jp-podcaster-12	Podcaster 12	ja-JP	Tokyo Japanese	high	38-year-old Trivia Host from Tokyo. Speaks Tokyo Japanese. Voice is light, airy, and precise
+ja-jp-podcaster-2	Podcaster 2	ja-JP	Tokyo Japanese	high	28-year-old Podcast Interviewer from Tokyo. Speaks Tokyo Japanese. Currently on npr. Sounds confident and clear.
+ja-jp-podcaster-3	Podcaster 3	ja-JP	Osaka Japanese	low	33-year-old Podcast Interviewer from Osaka. Speaks Osaka Japanese. Currently sitting next to you on the bus. Sounds confident and clear.
+ja-jp-podcaster-6	Podcaster 6	ja-JP	Tokyo Japanese	medium	37-year-old Podcast Interviewer from Tokyo. Speaks Tokyo Japanese. Currently in an oscar winning film. Sounds confident and clear.
+ja-jp-podcaster-9	Podcaster 9	ja-JP	Tokyo Japanese	high	43-year-old Trivia Host from Tokyo. Speaks Tokyo Japanese. Voice is light, airy, and precise
+ja-jp-storyteller-1	Storyteller 1	ja-JP	Tokyo Japanese	high	29-year-old Nature Documentary Narrator from Tokyo. Speaks Tokyo Japanese. Voice is engaging and empathic.
+ja-jp-storyteller-10	Storyteller 10	ja-JP	Tokyo Japanese	high	57-year-old Storyteller from Tokyo. Speaks Tokyo Japanese. Currently on the phone. Tone is professional yet approachable.
+ja-jp-storyteller-11	Storyteller 11	ja-JP	Tokyo Japanese	medium	36-year-old Philosopher from Tokyo. Speaks Tokyo Japanese. Voice is intimate talkshow.
+ja-jp-storyteller-3	Storyteller 3	ja-JP	Fukuoka Japanese	low	48-year-old Philosopher from Fukuoka. Speaks Fukuoka Japanese. Voice is engaging and empathic.
+ja-jp-storyteller-7	Storyteller 7	ja-JP	Fukuoka Japanese	medium	29-year-old Storyteller from Fukuoka. Speaks Fukuoka Japanese. Voice is comforting someone who is stressed.
+ja-jp-storyteller-8	Storyteller 8	ja-JP	Tokyo Japanese	medium	59-year-old Nature Documentary Narrator from Tokyo. Speaks Tokyo Japanese. Currently at an appointment. Tone is professional yet approachable.
+ja-jp-techagent-1	Tech Advisor 1	ja-JP	Fukuoka Japanese	high	43-year-old Architect from Fukuoka. Speaks Fukuoka Japanese. Tone is reflective, calm, and reassuring
+ja-jp-techagent-3	Tech Advisor 3	ja-JP	Osaka Japanese	low	37-year-old Architect from Osaka. Speaks Osaka Japanese. Tone is reflective, calm, and reassuring
+ja-jp-techagent-5	Tech Advisor 5	ja-JP	Osaka Japanese	medium	41-year-old Tech Support Agent from Osaka. Speaks Osaka Japanese. Voice is light, airy, and precise
+ja-jp-techagent-6	Tech Advisor 6	ja-JP	Tokyo Japanese	medium	31-year-old Architect from Tokyo. Speaks Tokyo Japanese. Currently on the phone. Voice is warm and engaging.
+ja-jp-techagent-7	Tech Advisor 7	ja-JP	Tokyo Japanese	high	32-year-old Tech Support Agent from Tokyo. Speaks Tokyo Japanese. Voice is clear, medium-pitch, and friendly.
+ja-jp-techagent-9	Tech Advisor 9	ja-JP	Fukuoka Japanese	low	48-year-old Architect from Fukuoka. Speaks Fukuoka Japanese. Voice is textured, resonant, and soothing.
+ja-jp-training-1	Training Voiceover 1	ja-JP	Tokyo Japanese	high	62-year-old Instructional Video Host from Tokyo. Speaks Tokyo Japanese. Currently on npr. Sounds confident and clear.
+ja-jp-training-10	Training Voiceover 10	ja-JP	Tokyo Japanese	low	60-year-old Instructional Video Host from Tokyo. Speaks Tokyo Japanese. Tone is reflective, calm, and reassuring
+ja-jp-training-12	Training Voiceover 12	ja-JP	Tokyo Japanese	medium	60-year-old Cooking Show Host from Tokyo. Speaks Tokyo Japanese. Currently in an oscar winning film. Tone is professional yet approachable.
+ja-jp-training-3	Training Voiceover 3	ja-JP	Osaka Japanese	medium	61-year-old Cooking Show Host from Osaka. Speaks Osaka Japanese. Voice is engaging and empathic.
+ja-jp-training-5	Training Voiceover 5	ja-JP	Tokyo Japanese	high	27-year-old Cooking Show Host from Tokyo. Speaks Tokyo Japanese. Voice is clear, medium-pitch, and friendly.
+ja-jp-training-6	Training Voiceover 6	ja-JP	Tokyo Japanese	high	23-year-old Instructional Video Host from Tokyo. Speaks Tokyo Japanese. Currently on npr. Tone is professional yet approachable.
+ja-jp-training-7	Training Voiceover 7	ja-JP	Fukuoka Japanese	medium	47-year-old Instructional Video Host from Fukuoka. Speaks Fukuoka Japanese. Voice is intimate talkshow.
+ja-jp-training-8	Training Voiceover 8	ja-JP	Osaka Japanese	high	61-year-old Cooking Show Host from Osaka. Speaks Osaka Japanese. Voice is engaging and empathic.
+ja-jp-training-9	Training Voiceover 9	ja-JP	Fukuoka Japanese	low	37-year-old Cooking Show Host from Fukuoka. Speaks Fukuoka Japanese. Currently in an oscar winning film. Tone is professional yet approachable.
+ja-jp-tutor-1	Tutor 1	ja-JP	Tokyo Japanese	medium	42-year-old Librarian from Tokyo. Speaks Tokyo Japanese. Tone is conversational, slightly dry humor, and warm
+ja-jp-tutor-10	Tutor 10	ja-JP	Tokyo Japanese	medium	55-year-old Chess Instructor from Tokyo. Speaks Tokyo Japanese. Currently sitting on couch. Tone is professional yet approachable.
+ja-jp-tutor-3	Tutor 3	ja-JP	Tokyo Japanese	high	25-year-old Professor from Tokyo. Speaks Tokyo Japanese. Tone is conversational, slightly dry humor, and warm
+ja-jp-tutor-5	Tutor 5	ja-JP	Fukuoka Japanese	high	26-year-old Teacher from Fukuoka. Speaks Fukuoka Japanese. Currently in a bookstore. Tone is professional yet approachable.
+ja-jp-tutor-6	Tutor 6	ja-JP	Fukuoka Japanese	low	45-year-old Teacher from Fukuoka. Speaks Fukuoka Japanese. Currently brainstorming in a meeting. Tone is professional yet approachable.
+ja-jp-tutor-8	Tutor 8	ja-JP	Tokyo Japanese	high	64-year-old Writing Tutor from Tokyo. Speaks Tokyo Japanese. Voice is cool, confident, and collaborative.
+
+[male] 51 voices
+id	display name	language	accent	pitch	description
+ja-jp-advisor-1	Authoritative Advisor 1	ja-JP	Osaka Japanese	low	44-year-old Doctor from Osaka. Speaks Osaka Japanese. Tone is objective, direct, and helpful
+ja-jp-advisor-10	Authoritative Advisor 10	ja-JP	Tokyo Japanese	low	32-year-old Financial Advisor from Tokyo. Speaks Tokyo Japanese. Currently on podcast. Voice is warm and engaging.
+ja-jp-advisor-3	Authoritative Advisor 3	ja-JP	Tokyo Japanese	low	40-year-old Lawyer from Tokyo. Speaks Tokyo Japanese. Currently on podcast. Sounds confident and clear.
+ja-jp-advisor-6	Authoritative Advisor 6	ja-JP	Osaka Japanese	low	42-year-old Lawyer from Osaka. Speaks Osaka Japanese. Voice is relaxed.
+ja-jp-advisor-8	Authoritative Advisor 8	ja-JP	Tokyo Japanese	low	39-year-old Lawyer from Tokyo. Speaks Tokyo Japanese. Voice is clear, medium-pitch, and friendly.
+ja-jp-advisor-9	Authoritative Advisor 9	ja-JP	Fukuoka Japanese	low	58-year-old Researcher from Fukuoka. Speaks Fukuoka Japanese. Voice is textured, resonant, and soothing.
+ja-jp-assistant-10	Digital Assistant 10	ja-JP	Fukuoka Japanese	medium	28-year-old Friend from Fukuoka. Speaks Fukuoka Japanese. Voice is bright, breezy, and youthful.
+ja-jp-assistant-11	Digital Assistant 11	ja-JP	Fukuoka Japanese	low	35-year-old Parent from Fukuoka. Speaks Fukuoka Japanese. Voice is light, airy, and precise
+ja-jp-assistant-12	Digital Assistant 12	ja-JP	Tokyo Japanese	low	44-year-old Friend from Tokyo. Speaks Tokyo Japanese. Voice is crisp and eager.
+ja-jp-assistant-2	Digital Assistant 2	ja-JP	Osaka Japanese	low	38-year-old Parent from Osaka. Speaks Osaka Japanese. Currently on podcast. Sounds confident and clear.
+ja-jp-assistant-3	Digital Assistant 3	ja-JP	Fukuoka Japanese	low	30-year-old Friend from Fukuoka. Speaks Fukuoka Japanese. Currently sitting on couch. Tone is professional yet approachable.
+ja-jp-commercial-2	Commercial Voiceover 2	ja-JP	Tokyo Japanese	low	22-year-old Fashion Consultant from Tokyo. Speaks Tokyo Japanese. Voice is resonant and witty.
+ja-jp-commercial-4	Commercial Voiceover 4	ja-JP	Tokyo Japanese	low	28-year-old Influencer from Tokyo. Speaks Tokyo Japanese. Voice is bright, breezy, and youthful.
+ja-jp-commercial-5	Commercial Voiceover 5	ja-JP	Tokyo Japanese	low	22-year-old Fashion Consultant from Tokyo. Speaks Tokyo Japanese. Voice is resonant and witty.
+ja-jp-concierge-12	Concierge 12	ja-JP	Tokyo Japanese	low	42-year-old Concierge from Tokyo. Speaks Tokyo Japanese. Voice is engaging and empathic.
+ja-jp-concierge-2	Concierge 2	ja-JP	Fukuoka Japanese	low	36-year-old Event Planner from Fukuoka. Speaks Fukuoka Japanese. Voice is clear, medium-pitch, and friendly.
+ja-jp-concierge-4	Concierge 4	ja-JP	Tokyo Japanese	low	34-year-old Concierge from Tokyo. Speaks Tokyo Japanese. Voice is resonant and witty.
+ja-jp-concierge-6	Concierge 6	ja-JP	Tokyo Japanese	medium	52-year-old Event Planner from Tokyo. Speaks Tokyo Japanese. Voice is crisp and eager.
+ja-jp-concierge-8	Concierge 8	ja-JP	Tokyo Japanese	low	33-year-old Concierge from Tokyo. Speaks Tokyo Japanese. Currently sitting on couch. Tone is professional yet approachable.
+ja-jp-csagent-1	Call Center Agent 1	ja-JP	Tokyo Japanese	low	30-year-old Sales Associate from Tokyo. Speaks Tokyo Japanese. Currently on npr. Tone is professional yet approachable.
+ja-jp-csagent-10	Call Center Agent 10	ja-JP	Fukuoka Japanese	medium	29-year-old Social Worker from Fukuoka. Speaks Fukuoka Japanese. Voice is energetic, colorful, and fast
+ja-jp-csagent-3	Call Center Agent 3	ja-JP	Tokyo Japanese	low	39-year-old Person Giving Driving Directions from Tokyo. Speaks Tokyo Japanese. Voice is intimate talkshow.
+ja-jp-csagent-5	Call Center Agent 5	ja-JP	Fukuoka Japanese	low	25-year-old Social Worker from Fukuoka. Speaks Fukuoka Japanese. Voice is comforting someone who is stressed.
+ja-jp-csagent-7	Call Center Agent 7	ja-JP	Tokyo Japanese	low	51-year-old Sales Associate from Tokyo. Speaks Tokyo Japanese. Voice is clear, medium-pitch, and friendly.
+ja-jp-csagent-9	Call Center Agent 9	ja-JP	Tokyo Japanese	low	39-year-old Customer Service Agent from Tokyo. Speaks Tokyo Japanese. Currently on npr. Tone is professional yet approachable.
+ja-jp-podcaster-1	Podcaster 1	ja-JP	Tokyo Japanese	low	57-year-old Podcast Interviewer from Tokyo. Speaks Tokyo Japanese. Voice is engaging and empathic.
+ja-jp-podcaster-11	Podcaster 11	ja-JP	Tokyo Japanese	medium	38-year-old Trivia Host from Tokyo. Speaks Tokyo Japanese. Tone is objective, direct, and helpful
+ja-jp-podcaster-4	Podcaster 4	ja-JP	Tokyo Japanese	low	39-year-old Political Activist from Tokyo. Speaks Tokyo Japanese. Currently sitting on couch. Tone is professional yet approachable.
+ja-jp-podcaster-5	Podcaster 5	ja-JP	Osaka Japanese	medium	38-year-old Trivia Host from Osaka. Speaks Osaka Japanese. Tone is objective, direct, and helpful
+ja-jp-podcaster-7	Podcaster 7	ja-JP	Tokyo Japanese	low	65-year-old Podcast Interviewer from Tokyo. Speaks Tokyo Japanese. Voice is energetic, colorful, and fast
+ja-jp-podcaster-8	Podcaster 8	ja-JP	Tokyo Japanese	low	34-year-old Radio Host from Tokyo. Speaks Tokyo Japanese. Voice is bright, breezy, and youthful.
+ja-jp-storyteller-12	Storyteller 12	ja-JP	Tokyo Japanese	low	26-year-old Philosopher from Tokyo. Speaks Tokyo Japanese. Currently brainstorming in a meeting. Tone is professional yet approachable.
+ja-jp-storyteller-2	Storyteller 2	ja-JP	Osaka Japanese	low	27-year-old Storyteller from Osaka. Speaks Osaka Japanese. Voice is engaging and empathic.
+ja-jp-storyteller-4	Storyteller 4	ja-JP	Tokyo Japanese	low	49-year-old Philosopher from Tokyo. Speaks Tokyo Japanese. Currently sitting next to you on the bus. Tone is professional yet approachable.
+ja-jp-storyteller-5	Storyteller 5	ja-JP	Tokyo Japanese	low	24-year-old Nature Documentary Narrator from Tokyo. Speaks Tokyo Japanese. Currently on npr. Tone is professional yet approachable.
+ja-jp-storyteller-6	Storyteller 6	ja-JP	Osaka Japanese	low	27-year-old Nature Documentary Narrator from Osaka. Speaks Osaka Japanese. Voice is light, airy, and precise
+ja-jp-storyteller-9	Storyteller 9	ja-JP	Osaka Japanese	low	38-year-old Philosopher from Osaka. Speaks Osaka Japanese. Currently sitting next to you on the bus. Tone is professional yet approachable.
+ja-jp-techagent-10	Tech Advisor 10	ja-JP	Tokyo Japanese	medium	32-year-old Architect from Tokyo. Speaks Tokyo Japanese. Voice is bright, breezy, and youthful.
+ja-jp-techagent-11	Tech Advisor 11	ja-JP	Fukuoka Japanese	low	46-year-old Architect from Fukuoka. Speaks Fukuoka Japanese. Currently on npr. Voice is warm and engaging.
+ja-jp-techagent-12	Tech Advisor 12	ja-JP	Tokyo Japanese	low	38-year-old Architect from Tokyo. Speaks Tokyo Japanese. Voice is crisp and eager.
+ja-jp-techagent-2	Tech Advisor 2	ja-JP	Tokyo Japanese	low	49-year-old Architect from Tokyo. Speaks Tokyo Japanese. Voice is resonant and witty.
+ja-jp-techagent-4	Tech Advisor 4	ja-JP	Tokyo Japanese	low	47-year-old Architect from Tokyo. Speaks Tokyo Japanese. Tone is peer-to-peer and curious
+ja-jp-techagent-8	Tech Advisor 8	ja-JP	Fukuoka Japanese	low	33-year-old Tech Support Agent from Fukuoka. Speaks Fukuoka Japanese. Currently on the phone. Voice is warm and engaging.
+ja-jp-training-2	Training Voiceover 2	ja-JP	Fukuoka Japanese	medium	40-year-old Instructional Video Host from Fukuoka. Speaks Fukuoka Japanese. Tone is conversational, slightly dry humor, and warm
+ja-jp-training-4	Training Voiceover 4	ja-JP	Tokyo Japanese	low	63-year-old Instructional Video Host from Tokyo. Speaks Tokyo Japanese. Voice is clear, medium-pitch, and friendly.
+ja-jp-tutor-11	Tutor 11	ja-JP	Fukuoka Japanese	high	31-year-old Professor from Fukuoka. Speaks Fukuoka Japanese. Currently in a bookstore. Sounds confident and clear.
+ja-jp-tutor-12	Tutor 12	ja-JP	Osaka Japanese	low	39-year-old Counselor from Osaka. Speaks Osaka Japanese. Currently sitting next to you on the bus. Tone is professional yet approachable.
+ja-jp-tutor-2	Tutor 2	ja-JP	Tokyo Japanese	low	36-year-old Therapist from Tokyo. Speaks Tokyo Japanese. Voice is cool, confident, and collaborative.
+ja-jp-tutor-4	Tutor 4	ja-JP	Tokyo Japanese	low	24-year-old Professor from Tokyo. Speaks Tokyo Japanese. Currently on podcast. Tone is professional yet approachable.
+ja-jp-tutor-7	Tutor 7	ja-JP	Osaka Japanese	low	22-year-old Lifestyle Coach from Osaka. Speaks Osaka Japanese. Voice is comforting someone who is stressed.
+ja-jp-tutor-9	Tutor 9	ja-JP	Tokyo Japanese	low	40-year-old Librarian from Tokyo. Speaks Tokyo Japanese. Currently on npr. Sounds confident and clear.

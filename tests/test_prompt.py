@@ -1,5 +1,8 @@
 import unittest
 import io
+import base64
+import os
+import wave
 from unittest.mock import MagicMock, patch
 from multiai_tts import Prompt, TTS_Provider
 
@@ -65,6 +68,137 @@ class TestTTSPrompt(unittest.TestCase):
         self.assertFalse(self.client.error)
         self.assertIsNotNone(wav)
         mock_client.models.generate_content.assert_called()
+
+    def _google_interactions_response(self, raw_wav):
+        response = MagicMock()
+        response.output_audio.data = base64.b64encode(raw_wav).decode('ascii')
+        return response
+
+    @patch('multiai_tts.prompt.genai')
+    def test_google_speech_metadata_keeps_script_separate(self, mock_genai):
+        """Gemini structured TTS sends the script and style in separate fields."""
+        raw_wav = b'RIFFtest WAVE'
+        mock_client = mock_genai.Client.return_value
+        mock_client.interactions.create.return_value = self._google_interactions_response(raw_wav)
+
+        self.client.set_tts_model(
+            'google', 'arbitrary-model', tts_prompt_mode='speech_metadata')
+        wav = self.client.get_wav('原稿', prompt='落ち着いて読む')
+
+        self.assertFalse(self.client.error)
+        self.assertEqual(wav, raw_wav)
+        kwargs = mock_client.interactions.create.call_args.kwargs
+        content = kwargs['input'][0]['content'][0]
+        self.assertEqual(content['text'], '原稿')
+        self.assertEqual(content['annotations'], [{
+            'type': 'speech_metadata', 'style': '落ち着いて読む'}])
+        self.assertEqual(kwargs['response_format'], {'type': 'audio'})
+        mock_genai.types.HttpRetryOptions.assert_called_with(
+            attempts=1,
+            http_status_codes=[408, 409, 500, 502, 503, 504],
+        )
+        mock_genai.types.HttpOptions.assert_called_with(
+            retry_options=mock_genai.types.HttpRetryOptions.return_value)
+        mock_genai.Client.assert_called_with(
+            api_key='dummy-google-key',
+            http_options=mock_genai.types.HttpOptions.return_value)
+
+    @patch('multiai_tts.prompt.genai')
+    def test_google_speech_metadata_normalizes_legacy_preset_voice(
+            self, mock_genai):
+        mock_client = mock_genai.Client.return_value
+        mock_client.interactions.create.return_value = self._google_interactions_response(b'RIFFtest WAVE')
+        self.client.set_tts_model(
+            'google', 'any', tts_prompt_mode='speech_metadata')
+        self.client.tts_voice_google = 'aoede'
+
+        self.client.get_wav('原稿')
+
+        kwargs = mock_client.interactions.create.call_args.kwargs
+        self.assertEqual(
+            kwargs['generation_config']['speech_config'],
+            [{'voice': 'Aoede'}])
+
+    @patch('multiai_tts.prompt.genai')
+    def test_google_speech_metadata_empty_prompt_has_no_annotation(self, mock_genai):
+        mock_client = mock_genai.Client.return_value
+        mock_client.interactions.create.return_value = self._google_interactions_response(b'RIFFtest WAVE')
+        self.client.set_tts_model('google', 'any', tts_prompt_mode='speech_metadata')
+
+        self.client.get_wav('原稿', prompt='')
+
+        content = mock_client.interactions.create.call_args.kwargs['input'][0]['content'][0]
+        self.assertEqual(content, {'type': 'text', 'text': '原稿'})
+
+    @patch('multiai_tts.prompt.genai')
+    def test_google_speech_metadata_never_inlines_prompt(self, mock_genai):
+        mock_client = mock_genai.Client.return_value
+        mock_client.interactions.create.return_value = self._google_interactions_response(b'RIFFtest WAVE')
+        self.client.set_tts_model('google', 'any', tts_prompt_mode='speech_metadata')
+
+        self.client.get_wav('本文', prompt='\n\n## 原稿\n')
+
+        content = mock_client.interactions.create.call_args.kwargs['input'][0]['content'][0]
+        self.assertEqual(content['text'], '本文')
+        self.assertEqual(content['annotations'][0]['style'], '\n\n## 原稿\n')
+
+    @patch('multiai_tts.prompt.genai')
+    def test_google_speech_metadata_applies_style_to_every_chunk(self, mock_genai):
+        buf = io.BytesIO()
+        with wave.open(buf, 'wb') as wav:
+            wav.setnchannels(1)
+            wav.setsampwidth(2)
+            wav.setframerate(24000)
+            wav.writeframes(b'\x00\x00' * 10)
+        mock_client = mock_genai.Client.return_value
+        mock_client.interactions.create.return_value = self._google_interactions_response(buf.getvalue())
+        self.client.set_tts_model('google', 'any', tts_prompt_mode='speech_metadata')
+
+        self.client.save_tts('abc.def.ghi', 'out_google_metadata.wav',
+                             prompt='calmly', chunk_size=4, split_chars='.')
+
+        self.assertFalse(self.client.error)
+        contents = [call.kwargs['input'][0]['content'][0]
+                    for call in mock_client.interactions.create.call_args_list]
+        self.assertEqual([content['text'] for content in contents], ['abc.', 'def.', 'ghi'])
+        self.assertTrue(all(content['annotations'][0]['style'] == 'calmly'
+                            for content in contents))
+        os.remove('out_google_metadata.wav')
+
+    @patch('multiai_tts.prompt.genai')
+    def test_google_speech_metadata_configures_one_sdk_attempt(self, mock_genai):
+        mock_client = mock_genai.Client.return_value
+        mock_client.interactions.create.return_value = self._google_interactions_response(
+            b'RIFFtest WAVE')
+        self.client.set_tts_model('google', 'any', tts_prompt_mode='speech_metadata')
+
+        wav = self.client.get_wav('原稿')
+
+        self.assertEqual(wav, b'RIFFtest WAVE')
+        self.assertEqual(mock_client.interactions.create.call_count, 1)
+        mock_genai.types.HttpRetryOptions.assert_called_with(
+            attempts=1,
+            http_status_codes=[408, 409, 500, 502, 503, 504],
+        )
+
+    @patch('multiai_tts.prompt.genai')
+    def test_google_legacy_mode_stays_on_generate_content(self, mock_genai):
+        mock_client = mock_genai.Client.return_value
+        mock_response = MagicMock()
+        part = MagicMock()
+        part.inline_data.data = b'legacy_pcm'
+        mock_response.candidates = [MagicMock(content=MagicMock(parts=[part]))]
+        mock_client.models.generate_content.return_value = mock_response
+        self.client.set_tts_model('google', 'gemini-3.8-flash-tts')
+
+        self.client.get_wav('script', prompt='style')
+
+        self.assertTrue(mock_client.models.generate_content.called)
+        self.assertFalse(mock_client.interactions.create.called)
+
+    def test_invalid_tts_prompt_mode_is_rejected(self):
+        with self.assertRaises(ValueError):
+            self.client.tts_prompt_mode = 'unknown'
 
     @patch('multiai_tts.prompt.speechsdk')
     def test_get_wav_azure(self, mock_speechsdk):

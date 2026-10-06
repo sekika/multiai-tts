@@ -5,14 +5,16 @@ cd `echo $0 | sed -e 's/[^/]*$//'`
 # test
 ./test.sh
 
-# Make package
-python3 -m pip install build
+# Make package and upload with the same Python environment.  Recent
+# hatchling emits Core Metadata 2.5, which older standalone ``twine``
+# executables cannot parse.
+python3 -m pip install --upgrade build twine
 echo "Making packages."
 cd ..
 python3 -m build
 
 # Token required. Check ~/.pypirc
-twine upload --skip-existing dist/*
+python3 -m twine upload --skip-existing dist/*
 
 # Uninstall multiai
 python3 -m pip uninstall multiai-tts
